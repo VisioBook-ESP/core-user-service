@@ -14,7 +14,12 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["app"]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where   = ["."]
+include = ["app*"]
+exclude = ["helm*", "charts*", "tests*", ".tests*"]
 
 [tool.black]
 line-length = 100

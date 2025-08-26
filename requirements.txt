@@ -1,0 +1,15 @@
+# Core web framework
+fastapi==0.115.*
+
+# ASGI server
+uvicorn[standard]==0.30.*
+
+# Validation & settings
+pydantic==2.*
+pydantic-settings==2.*
+
+# Logging
+python-json-logger==2.*
+
+# Monitoring / metrics
+prometheus-client==0.*

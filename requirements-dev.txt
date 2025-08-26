@@ -1,0 +1,18 @@
+-r requirements.txt
+
+# Testing
+pytest
+pytest-cov
+
+# Linting / formatting / type checking
+black
+isort
+mypy
+pylint
+
+# Security checks
+bandit
+safety
+
+# Git hooks
+pre-commit
