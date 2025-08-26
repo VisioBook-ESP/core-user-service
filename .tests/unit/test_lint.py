@@ -2,7 +2,7 @@ import subprocess
 
 
 def run(cmd: list[str]) -> None:
-    res = subprocess.run(cmd, capture_output=True, text=True)
+    res = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if res.returncode != 0:
         print(res.stdout)
         print(res.stderr)
