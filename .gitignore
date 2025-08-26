@@ -1,0 +1,23 @@
+# Environnements virtuels
+.venv/
+env/
+venv/
+
+# Fichiers d'environnement
+.env
+.env.*
+!.env.example
+
+# Fichiers Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Couverture tests
+htmlcov/
+.coverage
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
