@@ -1,0 +1,9 @@
+LICENSE
+README.md
+pyproject.toml
+app/main.py
+core_user_service.egg-info/PKG-INFO
+core_user_service.egg-info/SOURCES.txt
+core_user_service.egg-info/dependency_links.txt
+core_user_service.egg-info/requires.txt
+core_user_service.egg-info/top_level.txt
