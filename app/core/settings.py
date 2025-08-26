@@ -1,6 +1,8 @@
-from pydantic_settings import BaseSettings
-from pydantic import AnyHttpUrl
 from typing import List
+
+from pydantic import AnyHttpUrl
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     service_name: str = "core-user-service"
@@ -11,5 +13,6 @@ class Settings(BaseSettings):
     cors_origins: List[AnyHttpUrl] | List[str] = []
 
     model_config = {"env_file": ".env", "case_sensitive": False}
+
 
 settings = Settings()

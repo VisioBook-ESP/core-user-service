@@ -43,6 +43,7 @@ disable = [
 [tool.mypy]
 python_version = "3.13"
 strict = true
+explicit_package_bases = true
 
 [tool.pytest.ini_options]
 testpaths = [".tests"]

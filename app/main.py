@@ -1,33 +1,47 @@
+from __future__ import annotations
+
+from typing import List
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import Response
-from prometheus_client import CollectorRegistry, CONTENT_TYPE_LATEST, generate_latest, Counter
 
 from app.core.settings import settings
 
-registry = CollectorRegistry()
-HTTP_REQUESTS = Counter("http_requests_total", "Total HTTP requests", ["method","path","status"], registry=registry)
+
+def _compute_cors_origins() -> list[str]:
+    """
+    Convertit settings.cors_origins (List[AnyHttpUrl] | List[str]) en list[str]
+    et applique la règle: en dev si vide -> ["*"].
+    """
+    # settings.cors_origins peut contenir des AnyHttpUrl, on les cast en str.
+    raw: List[str] = [str(o) for o in settings.cors_origins] if settings.cors_origins else []
+    if settings.env.lower() == "dev" and not raw:
+        return ["*"]
+    return raw
+
 
 def create_app() -> FastAPI:
-    app = FastAPI(title=settings.service_name, version=settings.service_version)
+    application = FastAPI(title=settings.service_name, version=settings.service_version)
 
-    app.add_middleware(
+    # CORS — mypy veut Sequence[str] | str → on fournit list[str]
+    application.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins or ["*"],
+        allow_origins=_compute_cors_origins(),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-    @app.get("/health")
-    def health(): return {"status": "UP"}
+    @application.get("/health")
+    def health() -> dict[str, str]:
+        return {"status": "UP"}
 
-    @app.get("/ready")
-    def ready(): return {"status": "READY"}
+    @application.get("/ready")
+    def ready() -> dict[str, str]:
+        return {"status": "READY"}
 
-    @app.get("/metrics")
-    def metrics(): return Response(generate_latest(registry), media_type=CONTENT_TYPE_LATEST)
+    return application
 
-    return app
 
-app = create_app()
+# Uvicorn importe ce symbole
+app: FastAPI = create_app()
