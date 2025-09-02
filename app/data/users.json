@@ -88,5 +88,14 @@
     "username": "Test",
     "first_name": "Done",
     "last_name": "Doe"
+  },
+  {
+    "id": "u_c526f07b",
+    "email": "done@ex.com",
+    "username": "nicolopopo",
+    "password": "secret123",
+    "role": "user",
+    "first_name": "Done",
+    "last_name": "Doe"
   }
 ]
