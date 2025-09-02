@@ -96,6 +96,7 @@ def create_user(dto: "UserCreate") -> "UserOut":
     Create and persist a new user in the JSON file.
     Note: password is kept as-is for mock purposes only.
     """
+    from app.schemas.user import UserOut
 
     items = _load_data()
     record: UserRecord = {
@@ -117,6 +118,7 @@ def create_user(dto: "UserCreate") -> "UserOut":
 
 def update_user(user_id: str, dto: "UserUpdate") -> Optional["UserOut"]:
     """Update an existing user, returns updated model or None if not found."""
+    from app.schemas.user import UserOut
 
     items = _load_data()
     for u in items:
