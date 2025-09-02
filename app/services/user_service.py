@@ -12,27 +12,25 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Optional, TypedDict, cast
 
 if TYPE_CHECKING:
-    from app.schemas.user import UserOut  # local import to avoid cyclic types
-    from app.schemas.user import UserCreate, UserUpdate
+    # Only for typing; avoid top-level import cycles at runtime
+    from app.schemas.user import UserOut, UserCreate, UserUpdate, UserRole
 
 
-# Internal JSON record shape
+# Internal JSON record shape stored in users.json
 class UserRecord(TypedDict, total=False):
     id: str
     email: str
     username: str
-    # password: str
-    # role: str
+    password: str
+    role: str
     first_name: str
     last_name: str
     # created_at: str
     # updated_at: str
+    # version: int
 
 
-# version: int
-
-
-# Path to the JSON data file
+# Path to the JSON data file (app/data/users.json)
 DATA_PATH: Path = Path(__file__).resolve().parents[1] / "data" / "users.json"
 
 
@@ -70,21 +68,50 @@ def _save_data(data: List[UserRecord]) -> None:
     tmp.replace(DATA_PATH)
 
 
+# ---------------------------- Mapping helpers --------------------------------
+
+
+def _ensure_literal_role(value: str | None) -> "UserRole":
+    """
+    Coerce arbitrary string to allowed literal role ('admin'|'user'|'moderator'),
+    defaulting to 'user' if missing/invalid.
+    """
+    raw = (value or "user").lower()
+    if raw not in {"admin", "user", "moderator"}:
+        raw = "user"
+    return cast("UserRole", raw)
+
+
+def _to_user_out(u: UserRecord) -> "UserOut":
+    """
+    Map a raw dict (from JSON file) to the public UserOut model.
+    Import is local to avoid import cycles; never expose password.
+    """
+    from app.schemas.user import UserOut  # local import on purpose
+
+    return UserOut(
+        id=u["id"],
+        email=u["email"],
+        username=u["username"],
+        role=_ensure_literal_role(u.get("role")),
+        first_name=u["first_name"],
+        last_name=u["last_name"],
+    )
+
+
 # ---------------------------- Read ops ---------------------------------------
 
 
 def list_users() -> List["UserOut"]:
     """Return all users as Pydantic models."""
-
-    return [UserOut(**u) for u in _load_data()]
+    return [_to_user_out(u) for u in _load_data()]
 
 
 def get_user(user_id: str) -> Optional["UserOut"]:
     """Return a user by id or None if not found."""
-
     for u in _load_data():
         if u.get("id") == user_id:
-            return UserOut(**u)
+            return _to_user_out(u)
     return None
 
 
@@ -96,15 +123,13 @@ def create_user(dto: "UserCreate") -> "UserOut":
     Create and persist a new user in the JSON file.
     Note: password is kept as-is for mock purposes only.
     """
-    from app.schemas.user import UserOut
-
     items = _load_data()
     record: UserRecord = {
         "id": f"u_{uuid.uuid4().hex[:8]}",
         "email": dto.email,
         "username": dto.username,
-        "password": dto.password,
-        "role": dto.role,
+        "password": dto.password,          # stored in clear only for the mock
+        "role": dto.role or "user",        # default to 'user' if omitted
         "first_name": dto.first_name,
         "last_name": dto.last_name,
         # "created_at": _now_iso(),
@@ -113,13 +138,11 @@ def create_user(dto: "UserCreate") -> "UserOut":
     }
     items.append(record)
     _save_data(items)
-    return UserOut(**record)
+    return _to_user_out(record)
 
 
 def update_user(user_id: str, dto: "UserUpdate") -> Optional["UserOut"]:
     """Update an existing user, returns updated model or None if not found."""
-    from app.schemas.user import UserOut
-
     items = _load_data()
     for u in items:
         if u.get("id") == user_id:
@@ -128,19 +151,19 @@ def update_user(user_id: str, dto: "UserUpdate") -> Optional["UserOut"]:
                 u["email"] = dto.email
             if dto.username is not None:
                 u["username"] = dto.username
-                if dto.password is not None:
-                    u["password"] = dto.password
-                if dto.role is not None:
-                    u["role"] = dto.role
+            if dto.password is not None:
+                u["password"] = dto.password
+            if dto.role is not None:
+                u["role"] = dto.role
             if dto.first_name is not None:
                 u["first_name"] = dto.first_name
             if dto.last_name is not None:
                 u["last_name"] = dto.last_name
 
-            #  u["updated_at"] = _now_iso()
+            # u["updated_at"] = _now_iso()
             # u["version"] = int(u.get("version", 1)) + 1
             _save_data(items)
-            return UserOut(**u)
+            return _to_user_out(u)
     return None
 
 
