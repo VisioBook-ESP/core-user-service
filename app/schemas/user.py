@@ -1,9 +1,10 @@
 """
 Pydantic schemas for the User entity.
+All required fields are truly required for creation.
+Role defaults to 'user' if omitted.
 """
 
 from typing import Annotated, Literal
-
 from pydantic import BaseModel, EmailStr, Field
 
 # Allowed roles for users
@@ -11,24 +12,21 @@ UserRole = Literal["admin", "user", "moderator"]
 
 
 class UserBase(BaseModel):
-    """Base schema shared by all user models."""
-
-    email: EmailStr
-    username: Annotated[str, Field(min_length=3, max_length=50)]
-    role: UserRole = "user"
-    first_name: Annotated[str, Field(min_length=1, max_length=50)]
-    last_name: Annotated[str, Field(min_length=1, max_length=50)]
+    """Base attributes shared by in/out models (except password)."""
+    email: EmailStr                                 # required
+    username: Annotated[str, Field(min_length=3, max_length=50)]  # required
+    first_name: Annotated[str, Field(min_length=1, max_length=50)]  # required
+    last_name: Annotated[str, Field(min_length=1, max_length=50)]   # required
+    role: UserRole = "user"                         # optional, default -> "user"
 
 
 class UserCreate(UserBase):
-    """Schema for creating a new user (requires password)."""
-
-    password: Annotated[str, Field(min_length=6)]
+    """Payload required to create a user."""
+    password: Annotated[str, Field(min_length=6)]   # required (no default)
 
 
 class UserUpdate(BaseModel):
-    """Schema for updating an existing user (all fields optional)."""
-
+    """Partial update; all fields optional."""
     email: EmailStr | None = None
     username: Annotated[str, Field(min_length=3, max_length=50)] | None = None
     password: Annotated[str, Field(min_length=6)] | None = None
@@ -38,6 +36,5 @@ class UserUpdate(BaseModel):
 
 
 class UserOut(UserBase):
-    """Schema for returning user data (without password)."""
-
+    """Response model for user data (never includes password)."""
     id: str

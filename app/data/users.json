@@ -74,5 +74,28 @@
     "username": "Donna",
     "first_name": "Done",
     "last_name": "Doe"
+  },
+  {
+    "id": "u_16aed9a8",
+    "email": "done@ex.com",
+    "username": "Donna",
+    "first_name": "Done",
+    "last_name": "Doe"
+  },
+  {
+    "id": "u_915b1e37",
+    "email": "done@ex.com",
+    "username": "Test",
+    "first_name": "Done",
+    "last_name": "Doe"
+  },
+  {
+    "id": "u_ceda8399",
+    "email": "done@ex.com",
+    "username": "Test2",
+    "password": "secret123",
+    "role": "user",
+    "first_name": "Done",
+    "last_name": "Doe"
   }
 ]

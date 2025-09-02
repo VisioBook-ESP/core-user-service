@@ -103,8 +103,8 @@ def create_user(dto: "UserCreate") -> "UserOut":
         "id": f"u_{uuid.uuid4().hex[:8]}",
         "email": dto.email,
         "username": dto.username,
-        # "password": dto.password,
-        # "role": dto.role,
+        "password": dto.password,
+        "role": dto.role,
         "first_name": dto.first_name,
         "last_name": dto.last_name,
         # "created_at": _now_iso(),
@@ -128,10 +128,10 @@ def update_user(user_id: str, dto: "UserUpdate") -> Optional["UserOut"]:
                 u["email"] = dto.email
             if dto.username is not None:
                 u["username"] = dto.username
-                # if dto.password is not None:
-                #     u["password"] = dto.password
-                # if dto.role is not None:
-                #     u["role"] = dto.role
+                if dto.password is not None:
+                    u["password"] = dto.password
+                if dto.role is not None:
+                    u["role"] = dto.role
             if dto.first_name is not None:
                 u["first_name"] = dto.first_name
             if dto.last_name is not None:
