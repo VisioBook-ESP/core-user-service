@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, List, Optional, TypedDict, cast
 
 if TYPE_CHECKING:
     # Only for typing; avoid top-level import cycles at runtime
-    from app.schemas.user import UserOut, UserCreate, UserUpdate, UserRole
+    from app.schemas.user import UserCreate, UserOut, UserRole, UserUpdate
 
 
 # Internal JSON record shape stored in users.json
@@ -128,8 +128,8 @@ def create_user(dto: "UserCreate") -> "UserOut":
         "id": f"u_{uuid.uuid4().hex[:8]}",
         "email": dto.email,
         "username": dto.username,
-        "password": dto.password,          # stored in clear only for the mock
-        "role": dto.role or "user",        # default to 'user' if omitted
+        "password": dto.password,  # stored in clear only for the mock
+        "role": dto.role or "user",  # default to 'user' if omitted
         "first_name": dto.first_name,
         "last_name": dto.last_name,
         # "created_at": _now_iso(),
