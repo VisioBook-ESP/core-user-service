@@ -1,7 +1,9 @@
 version: "3.9"
 services:
   user-service:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     image: core-user-service:dev
     container_name: core-user-service
     env_file: .env
