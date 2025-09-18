@@ -34,7 +34,6 @@ jobs:
       - name: Install dev deps
         run: |
           python -m pip install -U pip
-          pip install -r requirements-dev.txt
       - name: Black (format check)
         run: black --check app
 
@@ -57,7 +56,6 @@ jobs:
       - name: Install dev deps
         run: |
           python -m pip install -U pip
-          pip install -r requirements-dev.txt
       - name: isort (import order check)
         run: isort --check-only app
 
@@ -81,7 +79,6 @@ jobs:
         run: |
           python -m pip install -U pip
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
       - name: Pylint
         run: pylint app
 
@@ -105,9 +102,39 @@ jobs:
         run: |
           python -m pip install -U pip
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
       - name: Mypy (type check)
         run: mypy app
+
+  no-debug-leftovers:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Fail if Python debug leftovers exist
+      shell: bash
+      run: |
+        set -e
+        if grep -RInE \
+           --exclude-dir={.git,__pycache__,.venv,venv,node_modules,dist,build} \
+           --include='*.py' \
+           '(pdb\.set_trace\((|breakpoint\()' .; then
+          echo "::error:: Python debug statements found."
+          exit 1
+        fi
+
+    - name: Fail if console.log/debugger exist (JS/TS)
+      shell: bash
+      run: |
+        set -e
+        # Si tu n'as pas de JS/TS, cette commande ne trouvera rien et passera
+        if grep -RInE \
+           --exclude-dir={.git,node_modules,dist,build} \
+           --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' \
+           '(console\.(log|debug|info|warn)\(|debugger;)' .; then
+          echo "::error:: console.* / debugger found."
+          exit 1
+        fi
+        echo "✅ No debug leftovers."
 
   # TODO: Réactiver quand les tests seront écrits
   docker-compose-and-unitests:
