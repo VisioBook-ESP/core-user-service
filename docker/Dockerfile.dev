@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 # Cache pip
 RUN --mount=type=cache,target=/root/.cache/pip true
 
-COPY requirements.txt requirements-dev.txt ./
-RUN pip install -U pip && pip install -r requirements.txt -r requirements-dev.txt
+COPY requirements.txt ./
+RUN pip install -U pip && pip install -r requirements.txt
 
 # On copie le code pour un premier build; en dev on montera un volume
 COPY app ./app
