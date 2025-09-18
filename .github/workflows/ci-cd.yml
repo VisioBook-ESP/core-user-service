@@ -105,23 +105,22 @@ jobs:
       - name: Mypy (type check)
         run: mypy app
 
-  no-debug-leftovers:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    no-debug-leftovers:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
 
-      - name: Fail if Python debug leftovers exist
-        shell: bash
-        run: |
-          set -e
-          if grep -RInE \
-            --exclude-dir={.git,__pycache__,.venv,venv,node_modules,dist,build,./.tests} \
-            --include='*.py' \
-            '(pdb\.set_trace\(|print\(|breakpoint\()' .; then
-            echo "::error:: Python debug statements found."
-            exit 1
-          fi
-          echo "✅ No debug leftovers."
+        - name: Fail if Python debug leftovers exist (exclude ./.tests/unit/)
+          shell: bash
+          run: |
+            set -euo pipefail
+            # Cherche dans les fichiers Python suivis par Git, en excluant ./.tests/unit/
+            if git grep -nI -E '(pdb\.set_trace\(|(^|[^[:alnum:]_])print\(|breakpoint\()' -- \
+                '*.py' ':(exclude).tests/unit/**'; then
+              echo "::error:: Python debug statements found outside ./.tests/unit/ (see matches above)." >&2
+              exit 1
+            fi
+            echo "✅ No debug leftovers outside ./.tests/unit/"
 
   # TODO: Réactiver quand les tests seront écrits
   docker-compose-and-unitests:
@@ -160,6 +159,7 @@ jobs:
         pylint-check,
         types-check,
         docker-compose-and-unitests,
+        no-debug-leftovers,
       ]
     steps:
       - name: Checkout
