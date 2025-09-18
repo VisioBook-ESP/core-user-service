@@ -135,7 +135,7 @@ jobs:
           timeout 60s bash -c 'until docker compose exec postgres pg_isready -U test_user -d test_db; do sleep 2; done'
 
       - name: Run tests inside container
-        run: docker compose exec -T core-user-service pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+        run: docker compose exec -T user-service pytest --cov=app --cov-report=term-missing --cov-fail-under=80
 
   #     - name: Cleanup
   #       if: always()
