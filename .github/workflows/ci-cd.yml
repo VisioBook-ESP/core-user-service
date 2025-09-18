@@ -106,23 +106,23 @@ jobs:
         run: mypy app
 
   no-debug-leftovers:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Fail if console.log/debugger exist (JS/TS)
-      shell: bash
-      run: |
-        set -e
-        # Si tu n'as pas de JS/TS, cette commande ne trouvera rien et passera
-        if grep -RInE \
-           --exclude-dir={.git,node_modules,dist,build} \
-           --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' \
-           '(console\.(log|debug|info|warn)\(|debugger;)' .; then
-          echo "::error:: console.* / debugger found."
-          exit 1
-        fi
-        echo "✅ No debug leftovers."
+      - name: Fail if console.log/debugger exist (JS/TS)
+        shell: bash
+        run: |
+          set -e
+          # Si tu n'as pas de JS/TS, cette commande ne trouvera rien et passera
+          if grep -RInE \
+            --exclude-dir={.git,node_modules,dist,build} \
+            --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' \
+            '(console\.(log|debug|info|warn)\(|debugger;)' .; then
+            echo "::error:: console.* / debugger found."
+            exit 1
+          fi
+          echo "✅ No debug leftovers."
 
   # TODO: Réactiver quand les tests seront écrits
   docker-compose-and-unitests:
