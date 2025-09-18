@@ -3,7 +3,7 @@ services:
   user-service:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.dev
     image: core-user-service:dev
     container_name: core-user-service
     env_file: .env
