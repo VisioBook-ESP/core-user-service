@@ -14,7 +14,7 @@ env:
   PYTHON_VERSION: "3.12" # mets "3.13" si tu y tiens
   IMAGE_REGISTRY: ghcr.io
   IMAGE_NAME: ghcr.io/visiobook-esp/core-user-service # adapte si besoin
-  DOCKERFILE_PROD: Dockerfile.prod # adapte si ton fichier est ailleurs
+  DOCKERFILE_PROD: docker/Dockerfile.prod # chemin correct vers le Dockerfile
 
 jobs:
   black-check:
