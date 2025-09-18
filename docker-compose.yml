@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   user-service:
     build:
@@ -6,10 +5,45 @@ services:
       dockerfile: docker/Dockerfile.dev
     image: core-user-service:dev
     container_name: core-user-service
-    env_file: .env
+    env_file: .env # Optionnel - seulement en développement local
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
     ports:
       - "8080:8080"
     volumes:
       - ./:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
     restart: unless-stopped
+
+  # Service de test pour la CI (profile qa)
+  test:
+    profiles: ["qa"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    image: core-user-service:test
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./:/app
+    command: pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+    depends_on:
+      - postgres
+
+  # Base de données pour les tests
+  postgres:
+    profiles: ["qa"]
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

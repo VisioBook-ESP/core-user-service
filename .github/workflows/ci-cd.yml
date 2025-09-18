@@ -117,11 +117,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Créer un fichier .env minimal pour éviter l'erreur
+      - name: Create minimal .env for Docker Compose
+        run: |
+          cat > .env << 'EOF'
+          PYTHONPATH=/app
+          PYTHONUNBUFFERED=1
+          APP_ENV=test
+          EOF
+
       # Build & run le service de test défini dans ton docker-compose.yml (profil "qa")
-      - name: Build test image
-        run: docker compose --profile qa build test
+      - name: Build test services
+        run: docker compose --profile qa build
+
+      - name: Start test services
+        run: docker compose --profile qa up -d
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          timeout 60s bash -c 'until docker compose --profile qa exec postgres pg_isready -U test_user -d test_db; do sleep 2; done'
+
       - name: Run tests inside container
-        run: docker compose --profile qa run --rm test
+        run: docker compose --profile qa exec -T test pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+
       - name: Cleanup
         if: always()
         run: docker compose --profile qa down -v

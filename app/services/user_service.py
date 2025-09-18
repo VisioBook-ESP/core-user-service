@@ -85,9 +85,10 @@ def _ensure_literal_role(value: str | None) -> "UserRole":
 def _to_user_out(u: UserRecord) -> "UserOut":
     """
     Map a raw dict (from JSON file) to the public UserOut model.
-    Import is local to avoid import cycles; never expose password.
+    Import is deferred to avoid import cycles; never expose password.
     """
-    from app.schemas.user import UserOut  # local import on purpose
+    # Import at runtime only when needed to avoid cycles
+    from app.schemas.user import UserOut  # pylint: disable=import-outside-toplevel
 
     return UserOut(
         id=u["id"],
