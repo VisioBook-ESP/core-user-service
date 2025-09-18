@@ -158,8 +158,8 @@ jobs:
         sorting-imports-check,
         pylint-check,
         types-check,
-        docker-compose-and-unitests,
         no-debug-leftovers,
+        docker-compose-and-unitests,
       ]
     steps:
       - name: Checkout
