@@ -112,39 +112,36 @@ jobs:
         run: mypy app
 
   # TODO: Réactiver quand les tests seront écrits
-  # tests:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  #     # Créer un fichier .env minimal pour éviter l'erreur
-  #     - name: Create minimal .env for Docker Compose
-  #       run: |
-  #         cat > .env << 'EOF'
-  #         PYTHONPATH=/app
-  #         PYTHONUNBUFFERED=1
-  #         APP_ENV=test
-  #         EOF
+      # Créer un fichier .env minimal pour éviter l'erreur
+      - name: Create minimal .env for Docker Compose
+        run: |
+          cat > .env << 'EOF'
+          PYTHONPATH=/app
+          PYTHONUNBUFFERED=1
+          APP_ENV=test
+          EOF
 
-  #     # Build & run le service de test défini dans ton docker-compose.yml (profil "qa")
-  #     - name: Build test services
-  #       run: docker compose --profile qa build
-
-  #     - name: Start test services
-  #       run: docker compose --profile qa up -d
+      # Build & run le service de test défini dans ton docker-compose.yml
+      - name: Build test services
+        run: docker compose -f docker-compose-prod.yml up --build -d
 
   #     - name: Wait for services to be ready
   #       run: |
   #         echo "Waiting for PostgreSQL to be ready..."
-  #         timeout 60s bash -c 'until docker compose --profile qa exec postgres pg_isready -U test_user -d test_db; do sleep 2; done'
+  #         timeout 60s bash -c 'until docker compose exec postgres pg_isready -U test_user -d test_db; do sleep 2; done'
 
   #     - name: Run tests inside container
-  #       run: docker compose --profile qa exec -T test pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+  #       run: docker compose exec -T test pytest --cov=app --cov-report=term-missing --cov-fail-under=80
 
   #     - name: Cleanup
   #       if: always()
-  #       run: docker compose --profile qa down -v
+  #       run: docker compose down -v
 
   docker-build-and-push:
     runs-on: ubuntu-latest

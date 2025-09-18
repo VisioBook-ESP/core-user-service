@@ -2,8 +2,8 @@ services:
   user-service:
     build:
       context: .
-      dockerfile: docker/Dockerfile.dev
-    image: core-user-service:dev
+      dockerfile: docker/Dockerfile.prod
+    image: core-user-service:prod
     container_name: core-user-service
     env_file: .env # Optionnel - seulement en développement local
     environment:
