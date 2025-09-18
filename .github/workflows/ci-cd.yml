@@ -110,16 +110,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fail if console.log/debugger exist (JS/TS)
+      - name: Fail if Python debug leftovers exist
         shell: bash
         run: |
           set -e
-          # Si tu n'as pas de JS/TS, cette commande ne trouvera rien et passera
           if grep -RInE \
-            --exclude-dir={.git,node_modules,dist,build} \
-            --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' \
-            '(console\.(log|debug|info|warn)\(|debugger;)' .; then
-            echo "::error:: console.* / debugger found."
+            --exclude-dir={.git,__pycache__,.venv,venv,node_modules,dist,build,./.tests} \
+            --include='*.py' \
+            '(pdb\.set_trace\(|print\(|breakpoint\()' .; then
+            echo "::error:: Python debug statements found."
             exit 1
           fi
           echo "✅ No debug leftovers."
