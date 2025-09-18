@@ -15,7 +15,7 @@ env:
   DOCKERFILE_PROD: docker/Dockerfile.prod # chemin correct vers le Dockerfile
 
 jobs:
-  black-check:
+  formatage-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,7 +38,7 @@ jobs:
       - name: Black (format check)
         run: black --check app
 
-  isort-check:
+  sorting-imports-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -85,7 +85,7 @@ jobs:
       - name: Pylint
         run: pylint app
 
-  mypy-check:
+  types-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -110,7 +110,7 @@ jobs:
         run: mypy app
 
   # TODO: Réactiver quand les tests seront écrits
-  tests:
+  docker-compose-and-unitests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
