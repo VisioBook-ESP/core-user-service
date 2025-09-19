@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
 
@@ -10,7 +8,7 @@ class Settings(BaseSettings):
     env: str = "dev"
     port: int = 8080
     log_level: str = "info"
-    cors_origins: List[AnyHttpUrl] | List[str] = []
+    cors_origins: list[AnyHttpUrl] | list[str] = []
 
     model_config = {"env_file": ".env", "case_sensitive": False}
 

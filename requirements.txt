@@ -26,13 +26,13 @@ httpx   # pour tester ton API FastAPI/Starlette
 
 # Linting / formatting / type checking
 black
-isort
 mypy
 pylint
+ruff
 
-# Security checks
-bandit
-safety
+# Security checks (versions récentes recommandées)
+bandit>=1.7.0
+safety>=3.0.0
 pip-audit   # complément moderne à safety
 
 

@@ -2,8 +2,6 @@
 User API endpoints. Provides CRUD operations for user resources.
 """
 
-from typing import List
-
 from fastapi import APIRouter, HTTPException, status
 
 from app.schemas.user import UserCreate, UserOut, UserUpdate
@@ -12,8 +10,8 @@ from app.services import user_service
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
-@router.get("/", response_model=List[UserOut])
-def list_users() -> List[UserOut]:
+@router.get("/", response_model=list[UserOut])
+def list_users() -> list[UserOut]:
     """Retrieve a list of users."""
     return user_service.list_users()
 

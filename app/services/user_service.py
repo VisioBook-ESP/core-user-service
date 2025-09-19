@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 if TYPE_CHECKING:
     # Only for typing; avoid top-level import cycles at runtime
@@ -39,10 +39,10 @@ DATA_PATH: Path = Path(__file__).resolve().parents[1] / "data" / "users.json"
 
 def _now_iso() -> str:
     """Return current UTC time as ISO-8601 string."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
-def _load_data() -> List[UserRecord]:
+def _load_data() -> list[UserRecord]:
     """
     Load user data from the JSON file.
 
@@ -57,10 +57,10 @@ def _load_data() -> List[UserRecord]:
     data: Any = json.loads(text)
     if not isinstance(data, list):
         raise RuntimeError(f"{DATA_PATH} must contain a JSON array")
-    return cast(List[UserRecord], data)
+    return cast(list[UserRecord], data)
 
 
-def _save_data(data: List[UserRecord]) -> None:
+def _save_data(data: list[UserRecord]) -> None:
     """Persist the full users array atomically."""
     DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
     tmp = DATA_PATH.with_suffix(".json.tmp")
@@ -71,7 +71,7 @@ def _save_data(data: List[UserRecord]) -> None:
 # ---------------------------- Mapping helpers --------------------------------
 
 
-def _ensure_literal_role(value: str | None) -> "UserRole":
+def _ensure_literal_role(value: str | None) -> UserRole:
     """
     Coerce arbitrary string to allowed literal role ('admin'|'user'|'moderator'),
     defaulting to 'user' if missing/invalid.
@@ -82,7 +82,7 @@ def _ensure_literal_role(value: str | None) -> "UserRole":
     return cast("UserRole", raw)
 
 
-def _to_user_out(u: UserRecord) -> "UserOut":
+def _to_user_out(u: UserRecord) -> UserOut:
     """
     Map a raw dict (from JSON file) to the public UserOut model.
     Import is deferred to avoid import cycles; never expose password.
@@ -103,12 +103,12 @@ def _to_user_out(u: UserRecord) -> "UserOut":
 # ---------------------------- Read ops ---------------------------------------
 
 
-def list_users() -> List["UserOut"]:
+def list_users() -> list[UserOut]:
     """Return all users as Pydantic models."""
     return [_to_user_out(u) for u in _load_data()]
 
 
-def get_user(user_id: str) -> Optional["UserOut"]:
+def get_user(user_id: str) -> UserOut | None:
     """Return a user by id or None if not found."""
     for u in _load_data():
         if u.get("id") == user_id:
@@ -119,7 +119,7 @@ def get_user(user_id: str) -> Optional["UserOut"]:
 # ---------------------------- Write ops --------------------------------------
 
 
-def create_user(dto: "UserCreate") -> "UserOut":
+def create_user(dto: UserCreate) -> UserOut:
     """
     Create and persist a new user in the JSON file.
     Note: password is kept as-is for mock purposes only.
@@ -142,7 +142,7 @@ def create_user(dto: "UserCreate") -> "UserOut":
     return _to_user_out(record)
 
 
-def update_user(user_id: str, dto: "UserUpdate") -> Optional["UserOut"]:
+def update_user(user_id: str, dto: UserUpdate) -> UserOut | None:
     """Update an existing user, returns updated model or None if not found."""
     items = _load_data()
     for u in items:

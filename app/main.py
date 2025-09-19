@@ -5,8 +5,6 @@ Initializes FastAPI app, CORS, health/ready endpoints, and API routers.
 
 from __future__ import annotations
 
-from typing import List
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,7 +19,7 @@ def _compute_cors_origins() -> list[str]:
     - Converts settings.cors_origins (List[AnyHttpUrl] | List[str]) into list[str].
     - If environment is "dev" and no origins are configured, returns ["*"].
     """
-    raw: List[str] = [str(o) for o in settings.cors_origins] if settings.cors_origins else []
+    raw: list[str] = [str(o) for o in settings.cors_origins] if settings.cors_origins else []
     if settings.env.lower() == "dev" and not raw:
         return ["*"]
     return raw
