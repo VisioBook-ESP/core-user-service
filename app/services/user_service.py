@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict, cast
 
@@ -17,17 +16,21 @@ if TYPE_CHECKING:
 
 
 # Internal JSON record shape stored in users.json
-class UserRecord(TypedDict, total=False):
+class UserRecord(TypedDict):
+    """Required fields for UserRecord."""
+
     id: str
     email: str
     username: str
     password: str
     role: str
+
+
+class UserRecordOptional(UserRecord, total=False):
+    """Optional fields for UserRecord."""
+
     first_name: str
     last_name: str
-    # created_at: str
-    # updated_at: str
-    # version: int
 
 
 # Path to the JSON data file (app/data/users.json)
@@ -37,12 +40,7 @@ DATA_PATH: Path = Path(__file__).resolve().parents[1] / "data" / "users.json"
 # ---------------------------- IO helpers -------------------------------------
 
 
-def _now_iso() -> str:
-    """Return current UTC time as ISO-8601 string."""
-    return datetime.now(UTC).isoformat()
-
-
-def _load_data() -> list[UserRecord]:
+def _load_data() -> list[UserRecordOptional]:
     """
     Load user data from the JSON file.
 
@@ -57,10 +55,10 @@ def _load_data() -> list[UserRecord]:
     data: Any = json.loads(text)
     if not isinstance(data, list):
         raise RuntimeError(f"{DATA_PATH} must contain a JSON array")
-    return cast(list[UserRecord], data)
+    return cast(list[UserRecordOptional], data)
 
 
-def _save_data(data: list[UserRecord]) -> None:
+def _save_data(data: list[UserRecordOptional]) -> None:
     """Persist the full users array atomically."""
     DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
     tmp = DATA_PATH.with_suffix(".json.tmp")
@@ -82,7 +80,7 @@ def _ensure_literal_role(value: str | None) -> UserRole:
     return cast("UserRole", raw)
 
 
-def _to_user_out(u: UserRecord) -> UserOut:
+def _to_user_out(u: UserRecordOptional) -> UserOut:
     """
     Map a raw dict (from JSON file) to the public UserOut model.
     Import is deferred to avoid import cycles; never expose password.
@@ -95,8 +93,8 @@ def _to_user_out(u: UserRecord) -> UserOut:
         email=u["email"],
         username=u["username"],
         role=_ensure_literal_role(u.get("role")),
-        first_name=u["first_name"],
-        last_name=u["last_name"],
+        first_name=u.get("first_name"),
+        last_name=u.get("last_name"),
     )
 
 
@@ -125,18 +123,20 @@ def create_user(dto: UserCreate) -> UserOut:
     Note: password is kept as-is for mock purposes only.
     """
     items = _load_data()
-    record: UserRecord = {
+    record: UserRecordOptional = {
         "id": f"u_{uuid.uuid4().hex[:8]}",
         "email": dto.email,
         "username": dto.username,
         "password": dto.password,  # stored in clear only for the mock
         "role": dto.role or "user",  # default to 'user' if omitted
-        "first_name": dto.first_name,
-        "last_name": dto.last_name,
-        # "created_at": _now_iso(),
-        # "updated_at": _now_iso(),
-        # "version": 1,
     }
+
+    # Add optional fields only if they have values
+    if dto.first_name is not None:
+        record["first_name"] = dto.first_name
+    if dto.last_name is not None:
+        record["last_name"] = dto.last_name
+
     items.append(record)
     _save_data(items)
     return _to_user_out(record)

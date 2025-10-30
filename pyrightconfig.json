@@ -1,0 +1,25 @@
+{
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "strict",
+  "reportMissingTypeStubs": false,
+  "reportUnknownMemberType": false,
+  "reportGeneralTypeIssues": false,
+  "reportOptionalMemberAccess": false,
+  "reportPrivateImportUsage": false,
+
+  "executionEnvironments": [
+    {
+      "root": "alembic",
+      "reportMissingTypeStubs": false,
+      "reportUnknownMemberType": false,
+      "reportGeneralTypeIssues": false,
+      "reportAttributeAccessIssue": false,
+      "reportUnknownVariableType": false,
+      "reportUnknownArgumentType": false
+    },
+    {
+      "root": "app",
+      "typeCheckingMode": "strict"
+    }
+  ]
+}

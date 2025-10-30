@@ -4,10 +4,19 @@ fastapi==0.115.*
 # ASGI server
 uvicorn[standard]==0.30.*
 
+# Database
+sqlalchemy==2.*
+psycopg2-binary==2.*
+alembic==1.*
+
 # Validation & settings
 pydantic==2.*
 pydantic-settings==2.*
 email-validator==2.*
+
+# Security
+bcrypt==4.*
+python-multipart==0.*
 
 # Logging
 python-json-logger==2.*

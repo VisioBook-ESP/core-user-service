@@ -39,7 +39,7 @@ def create_app() -> FastAPI:
         title=settings.service_name,
         version=settings.service_version,
         docs_url="/api/docs",  # Swagger UI at /api/docs
-        redoc_url=None,  # Disable ReDoc
+        redoc_url="/api/redoc",  # ReDoc at /api/redoc
         openapi_url="/api/openapi.json",  # OpenAPI schema
     )
 

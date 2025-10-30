@@ -17,8 +17,6 @@ class UserBase(BaseModel):
 
     email: EmailStr  # required
     username: Annotated[str, Field(min_length=3, max_length=50)]  # required
-    first_name: Annotated[str, Field(min_length=1, max_length=50)]  # required
-    last_name: Annotated[str, Field(min_length=1, max_length=50)]  # required
     role: UserRole = "user"  # optional, default -> "user"
 
 
@@ -26,6 +24,9 @@ class UserCreate(UserBase):
     """Payload required to create a user."""
 
     password: Annotated[str, Field(min_length=6)]  # required (no default)
+    # Profile fields (optional)
+    first_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
+    last_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
 
 
 class UserUpdate(BaseModel):
@@ -39,7 +40,13 @@ class UserUpdate(BaseModel):
     last_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
 
 
-class UserOut(UserBase):
+class UserOut(BaseModel):
     """Response model for user data (never includes password)."""
 
     id: str
+    email: EmailStr
+    username: str
+    role: UserRole
+    # Profile fields (optional)
+    first_name: str | None = None
+    last_name: str | None = None

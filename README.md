@@ -1,4 +1,4 @@
-# Microservice **User Service** du projet Visiobook.
+# Microservice **User Service** Développé avec **Python 3.12.6** et **FastAPI**, il gère l'authentification, la gestion des utilisateurs et leurs rôles.u projet Visiobook.
 
 Développé avec **Python 3.12.6** et **FastAPI**, il gère l'authentification, la gestion des utilisateurs et leurs rôles.  
 Un workflow GitHub Actions est configuré dans `.github/workflows/ci-cd.yml`.
@@ -242,7 +242,6 @@ app/
 Dockerfile
 docker-compose.yml
 requirements.txt
-requirements-dev.txt
 .env.example
 README.md
 

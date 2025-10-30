@@ -96,7 +96,7 @@ lint:
 	@echo ">> Ruff"
 	$(RUFF) check .
 	@echo ">> Pylint (app/)"
-	$(PYLINT) app
+	PYTHONPATH=$(shell pwd) $(PYLINT) app
 
 lint-fix:
 	$(RUFF) check . --fix
