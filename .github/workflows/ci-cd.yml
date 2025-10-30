@@ -11,7 +11,7 @@ permissions:
 env:
   PYTHON_VERSION: "3.12.6"
   IMAGE_REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/visiobook-esp/core-user-service
+  IMAGE_NAME: ghcr.io/visiobook-esp/core-user-service-dev
   DOCKERFILE_PROD: docker/Dockerfile.prod
 
 jobs:
