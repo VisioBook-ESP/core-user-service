@@ -38,11 +38,11 @@ black
 mypy
 pylint
 ruff
+types-passlib  # Type stubs for passlib
 
 # Security checks (versions récentes recommandées)
 bandit>=1.7.0
-safety>=3.0.0
-pip-audit   # complément moderne à safety
+pip-audit   # audit moderne des packages Python
 
 
 # Dev DX

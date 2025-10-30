@@ -12,7 +12,6 @@ BLACK := $(VENV_DIR)/bin/black
 PYLINT := $(VENV_DIR)/bin/pylint
 MYPY := $(VENV_DIR)/bin/mypy
 BANDIT := $(VENV_DIR)/bin/bandit
-SAFETY := $(VENV_DIR)/bin/safety
 
 ifeq ($(OS),Windows_NT)
 	PY := .\.venv\Scripts\python.exe
@@ -24,7 +23,6 @@ ifeq ($(OS),Windows_NT)
 	PYLINT := .\.venv\Scripts\pylint.exe
 	MYPY := .\.venv\Scripts\mypy.exe
 	BANDIT := .\.venv\Scripts\bandit.exe
-	SAFETY := .\.venv\Scripts\safety.exe
 endif
 
 # ====== Phonies ======
@@ -113,12 +111,6 @@ typecheck:
 security:
 	@echo ">> Bandit (code security)"
 	$(BANDIT) -q -r app
-	@if [ -f requirements.txt ]; then \
-		echo ">> Safety (dependency vulnerabilities)"; \
-		$(SAFETY) scan -r requirements.txt || true; \
-	else \
-		echo ">> Safety skipped (no requirements.txt)"; \
-	fi
 
 # ====== Clean ======
 clean:
