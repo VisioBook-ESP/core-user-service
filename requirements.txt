@@ -1,0 +1,50 @@
+# Core web framework
+fastapi==0.115.*
+
+# ASGI server
+uvicorn[standard]==0.30.*
+
+# Database
+sqlalchemy==2.*
+psycopg2-binary==2.*
+alembic==1.*
+
+# Validation & settings
+pydantic==2.*
+pydantic-settings==2.*
+email-validator==2.*
+
+# Security
+bcrypt==4.*
+python-multipart==0.*
+
+# Logging
+python-json-logger==2.*
+PyJWT==2.*
+passlib[bcrypt]==1.*
+
+
+# Monitoring / metrics
+prometheus-client==0.*
+
+# Testing
+pytest
+pytest-cov
+pytest-asyncio
+httpx   # pour tester ton API FastAPI/Starlette
+
+# Linting / formatting / type checking
+black
+mypy
+pylint
+ruff
+types-passlib  # Type stubs for passlib
+
+# Security checks (versions récentes recommandées)
+bandit>=1.7.0
+pip-audit   # audit moderne des packages Python
+
+
+# Dev DX
+watchfiles  # hot-reload uvicorn
+ipython

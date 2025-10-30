@@ -1,0 +1,111 @@
+[project]
+name = "core-user-service"
+version = "0.1.0"
+requires-python = "==3.12.*"
+dependencies = [
+  "fastapi==0.115.*",
+  "uvicorn[standard]==0.30.*",
+  "pydantic==2.*",
+  "pydantic-settings==2.*",
+  "python-json-logger==2.*",
+  "prometheus-client==0.*",
+  "passlib[bcrypt]==1.7.*",
+  "pyjwt==2.*"
+]
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where   = ["."]
+include = ["app*"]
+exclude = ["helm*", "charts*", "tests*", ".tests*"]
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint.main]
+load-plugins = [
+  "pylint.extensions.mccabe",
+  "pylint.extensions.docparams"
+]
+ignore = ["venv", ".venv", "__pycache__", "tests"]
+max-line-length = 100
+disable = [
+  "C0114",  # missing-module-docstring
+  "C0115",  # missing-class-docstring
+  "C0116",  # missing-function-docstring
+  "R0903",  # too-few-public-methods (normal for models/data classes)
+]
+
+# Ignore invalid-name for alembic migration files (auto-generated names)
+[tool.pylint.basic]
+good-names = ["i", "j", "k", "ex", "Run", "_", "id", "db", "op", "SessionLocal"]
+module-rgx = "(([a-z_][a-z0-9_]*)|([0-9a-f]+_[a-zA-Z0-9_]+))|([A-Z][a-zA-Z0-9]+)$"
+
+[tool.pylint.design]
+# Increase complexity threshold for database operations
+max-complexity = 15
+
+[tool.pylint.typecheck]
+# Configure dynamic members for Alembic modules instead of ignoring them completely
+generated-members = [
+  "context.config",
+  "context.configure", 
+  "context.begin_transaction",
+  "context.run_migrations",
+  "context.is_offline_mode",
+  "op.create_table",
+  "op.drop_table", 
+  "op.create_index",
+  "op.drop_index",
+  "op.alter_column",
+  "op.f"
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+explicit_package_bases = true
+# Plugin SQLAlchemy pour une meilleure compréhension des modèles
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+
+# Configuration pour les modules Alembic qui ont des membres dynamiques
+[[tool.mypy.overrides]]
+module = "alembic.context"
+ignore_missing_imports = false
+# Alembic context est un module proxy dynamique
+disallow_any_generics = false
+
+[[tool.mypy.overrides]]
+module = "alembic.op"
+ignore_missing_imports = false
+# Alembic op est un module proxy dynamique  
+disallow_any_generics = false
+
+# Configuration spécifique pour les fichiers alembic
+[[tool.mypy.overrides]]
+module = "alembic.*"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=app --cov-report=term-missing --cov-fail-under=0"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = [".venv", "venv", "__pycache__"]
+
+[tool.ruff.lint]
+# E/F: base, I: isort, B: bugbear, UP: pyupgrade
+select = ["E", "F", "I", "B", "UP"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
