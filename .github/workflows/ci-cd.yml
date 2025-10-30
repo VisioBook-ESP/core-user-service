@@ -175,7 +175,7 @@ jobs:
         with:
           registry: ${{ env.IMAGE_REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GITHUBTOKEN }}
 
       - name: Extract Docker metadata (tags/labels)
         id: meta
