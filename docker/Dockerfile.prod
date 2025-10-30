@@ -25,6 +25,10 @@ RUN addgroup --system appgroup && adduser --system --uid 1001 --ingroup appgroup
 
 COPY --from=builder /venv /venv
 COPY --from=builder /app/app ./app
+COPY --from=builder /app/tests ./tests
+
+# Give appuser write permissions to the working directory
+RUN chown -R appuser:appgroup /app
 
 ENV PATH=/venv/bin:$PATH \
     PYTHONPATH=/app
