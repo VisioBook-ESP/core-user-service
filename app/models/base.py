@@ -4,7 +4,6 @@ Base model with common fields for all database models.
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, Integer, text
@@ -20,7 +19,7 @@ class BaseModel(Base):
     Abstract base class for all database models.
 
     Provides common fields:
-    - id: UUID primary key
+    - id: Integer primary key (auto-increment)
     - created_at: Timestamp when record was created
     - updated_at: Timestamp when record was last updated
     - version: Version number for optimistic locking
@@ -28,7 +27,7 @@ class BaseModel(Base):
 
     __abstract__ = True
 
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     created_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
     )

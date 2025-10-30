@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.users import router as users_router
+from app.api.v1.auth import router as auth_router
 from app.core.settings import settings
 
 
@@ -64,6 +65,7 @@ def create_app() -> FastAPI:
 
     # Register API routers
     application.include_router(users_router)
+    application.include_router(auth_router)
 
     return application
 
