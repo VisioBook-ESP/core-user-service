@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_admin
-from app.models.user import User
+from app.core.security import get_password_hash
+from app.models.user import User, UserRole, Profile
 from app.schemas.auth import TokenData
 from app.schemas.user import UserCreate, UserOut, UserUpdate
-from app.services import user_service
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -48,7 +48,13 @@ def get_my_profile(
         )
     
     # Convert string user_id back to integer for database query
-    user_id = int(current_user.user_id)
+    try:
+        user_id = int(current_user.user_id)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user token format",
+        ) from exc
     
     # Query user from database using integer ID
     user = db.query(User).filter(User.id == user_id).first()
@@ -97,32 +103,118 @@ def get_user(
 
 
 @router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def create_user(dto: UserCreate) -> UserOut:
+def create_user(
+    dto: UserCreate,
+    db: Session = Depends(get_db)
+) -> UserOut:
     """Create a new user."""
-    return user_service.create_user(dto)
+    # Check if user already exists
+    existing_user = db.query(User).filter(
+        (User.email == dto.email) | (User.username == dto.username)
+    ).first()
+    
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email or username already exists",
+        )
+    
+    # Create new user
+    user = User(
+        email=dto.email,
+        username=dto.username,
+        password=get_password_hash(dto.password),
+        role=UserRole(dto.role),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    
+    # Create profile if first_name or last_name provided
+    if dto.first_name or dto.last_name:
+        profile = Profile(
+            user_id=user.id,
+            first_name=dto.first_name,
+            last_name=dto.last_name,
+        )
+        db.add(profile)
+        db.commit()
+        db.refresh(user)  # Refresh to include profile
+    
+    return UserOut(
+        id=str(user.id),
+        email=user.email,
+        username=user.username,
+        role=user.role.value,
+        first_name=user.profile.first_name if user.profile else None,
+        last_name=user.profile.last_name if user.profile else None,
+    )
 
 
 @router.put("/{user_id}", response_model=UserOut)
-def update_user(user_id: str, dto: UserUpdate) -> UserOut:
+def update_user(
+    user_id: int, 
+    dto: UserUpdate,
+    db: Session = Depends(get_db)
+) -> UserOut:
     """Update an existing user."""
-    updated = user_service.update_user(user_id, dto)
-    if not updated:
+    # Find user in database
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    return updated
+    
+    # Update fields that are provided
+    if dto.email is not None:
+        user.email = dto.email
+    if dto.username is not None:
+        user.username = dto.username
+    if dto.password is not None:
+        user.password = get_password_hash(dto.password)
+    if dto.role is not None:
+        user.role = UserRole(dto.role)
+    
+    # Update profile fields if they exist
+    if dto.first_name is not None or dto.last_name is not None:
+        if not user.profile:
+            user.profile = Profile(user_id=user.id)
+            db.add(user.profile)
+        
+        if dto.first_name is not None:
+            user.profile.first_name = dto.first_name
+        if dto.last_name is not None:
+            user.profile.last_name = dto.last_name
+    
+    db.commit()
+    db.refresh(user)
+    
+    return UserOut(
+        id=str(user.id),
+        email=user.email,
+        username=user.username,
+        role=user.role.value,
+        first_name=user.profile.first_name if user.profile else None,
+        last_name=user.profile.last_name if user.profile else None,
+    )
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(
-    user_id: str,
-    current_user: TokenData = Depends(require_admin)  # 🔒 Admin only
+    user_id: int,
+    _current_user: TokenData = Depends(require_admin),  # 🔒 Admin only
+    db: Session = Depends(get_db)
 ) -> None:
     """Delete a user by ID. (Admin only)"""
-    ok = user_service.delete_user(user_id)
-    if not ok:
+    # Find user in database
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
+    
+    # Delete user (cascade will delete profile automatically)
+    db.delete(user)
+    db.commit()

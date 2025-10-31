@@ -2,7 +2,7 @@
 Tests for authentication endpoints and role-based access control (RBAC).
 """
 
-import pytest
+import jwt
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -28,7 +28,7 @@ class TestAuthEndpoints:
         # Check response structure
         assert "access_token" in data
         assert data["token_type"] == "bearer"
-        assert data["user_id"] == "user_001"
+        assert data["user_id"] == "1"  # Now using integer IDs as strings
         assert data["role"] == "admin"
         assert data["expires_in"] == 24 * 3600  # 24 hours
 
@@ -46,7 +46,7 @@ class TestAuthEndpoints:
         
         assert "access_token" in data
         assert data["role"] == "user"
-        assert data["user_id"] == "user_002"
+        assert data["user_id"] == "2"  # Now using integer IDs as strings
 
     def test_login_success_moderator(self):
         """Test successful login with moderator credentials."""
@@ -62,7 +62,7 @@ class TestAuthEndpoints:
         
         assert "access_token" in data
         assert data["role"] == "moderator"
-        assert data["user_id"] == "user_003"
+        assert data["user_id"] == "3"  # Now using integer IDs as strings
 
     def test_login_invalid_email(self):
         """Test login with invalid email."""
@@ -145,10 +145,10 @@ class TestProtectedRoutes:
         token = self._get_token("admin")
         
         response = client.delete(
-            "/api/v1/users/some-user-id",
+            "/api/v1/users/999",  # Use integer ID instead of string
             headers={"Authorization": f"Bearer {token}"}
         )
-        # Note: This might return 404 if user doesn't exist in service
+        # Note: This will return 404 since user 999 doesn't exist, but tests auth flow
         assert response.status_code in [204, 404]
 
     def test_delete_user_as_regular_user_forbidden(self):
@@ -156,7 +156,7 @@ class TestProtectedRoutes:
         token = self._get_token("user")
         
         response = client.delete(
-            "/api/v1/users/some-user-id",
+            "/api/v1/users/999",  # Use integer ID instead of string
             headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 403
@@ -167,7 +167,7 @@ class TestProtectedRoutes:
         token = self._get_token("moderator")
         
         response = client.delete(
-            "/api/v1/users/some-user-id",
+            "/api/v1/users/999",  # Use integer ID instead of string
             headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 403
@@ -175,7 +175,7 @@ class TestProtectedRoutes:
 
     def test_delete_user_no_token(self):
         """Test deleting user without authentication."""
-        response = client.delete("/api/v1/users/some-user-id")
+        response = client.delete("/api/v1/users/999")  # Use integer ID
         assert response.status_code == 401
 
 
@@ -184,9 +184,6 @@ class TestJWTTokens:
 
     def test_token_contains_user_data(self):
         """Test that JWT token contains correct user data."""
-        import jwt
-        from app.core.settings import settings
-        
         # Get a token
         response = client.post(
             "/auth/login",
@@ -200,7 +197,7 @@ class TestJWTTokens:
         # Decode token (without verification for testing)
         payload = jwt.decode(token, options={"verify_signature": False})
         
-        assert payload["sub"] == "user_001"  # user_id
+        assert payload["sub"] == "1"  # user_id - now using integer IDs as strings
         assert payload["email"] == "admin@visiobook.com"
         assert payload["role"] == "admin"
         assert "exp" in payload  # expiration time

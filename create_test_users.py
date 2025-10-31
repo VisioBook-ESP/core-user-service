@@ -3,6 +3,8 @@ Script to create test users in the database with hashed passwords.
 Run this once to populate the database with test users.
 """
 
+from fastapi import HTTPException
+
 from app.core.database import get_db, engine
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole, Profile
@@ -83,9 +85,9 @@ def create_test_users():
         print("  👤 user@visiobook.com / user123 (USER)")
         print("  🛡️  moderator@visiobook.com / moderator123 (MODERATOR)")
         
-    except Exception as e:
-        print(f"❌ Error creating test users: {e}")
-        db.rollback()
+    except (HTTPException, ValueError) as exc:
+        print(f"Error creating test users: {exc}")
+        raise
     finally:
         db.close()
 

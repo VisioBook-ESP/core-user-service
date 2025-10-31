@@ -10,11 +10,11 @@ from app.models.user import UserRole
 from app.schemas.auth import TokenData
 
 # HTTP Bearer token security scheme
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials | None = Depends(security)
 ) -> TokenData:
     """
     Extract and validate the current user from JWT token.
@@ -28,6 +28,13 @@ async def get_current_user(
     Raises:
         HTTPException: If token is invalid or expired
     """
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token d'authentification requis",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     token = credentials.credentials
     payload = verify_token(token)
     
@@ -78,11 +85,11 @@ def require_role(required_role: UserRole):
         
         try:
             user_role = UserRole(current_user.role)
-        except ValueError:
+        except ValueError as exc:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Rôle utilisateur invalide",
-            )
+            ) from exc
         
         # Check role hierarchy: ADMIN > MODERATOR > USER
         role_hierarchy = {

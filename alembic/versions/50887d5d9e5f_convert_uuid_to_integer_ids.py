@@ -20,10 +20,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Drop existing tables and enum type
+    # Drop existing tables (enum will be recreated automatically)
     op.drop_table('profiles')
     op.drop_table('users')
-    op.execute('DROP TYPE IF EXISTS userrole CASCADE')
     
     # Create users table with integer ID
     op.create_table('users',
