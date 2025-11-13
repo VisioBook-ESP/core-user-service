@@ -2,28 +2,24 @@ services:
   core-user-service:
     build:
       context: .
-      dockerfile: docker/Dockerfile.dev
-    image: core-user-service:dev
+      dockerfile: docker/Dockerfile.prod
+    image: core-user-service:prod
     container_name: core-user-service
-    env_file: .env # Optionnel - seulement en développement local
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
       - DATABASE_URL=postgresql://visiobook_user:visiobook_pass@postgres:5432/visiobook_users
     ports:
       - "8080:8080"
-    volumes:
-      - ./:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
 
-  # Base de données PostgreSQL pour le développement
+  # Base de données PostgreSQL pour la production
   postgres:
     image: postgres:15-alpine
-    container_name: visiobook_postgres
+    container_name: visiobook_postgres_prod
     environment:
       POSTGRES_DB: visiobook_users
       POSTGRES_USER: visiobook_user
@@ -31,7 +27,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_prod_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U visiobook_user -d visiobook_users"]
       interval: 10s
@@ -39,4 +35,4 @@ services:
       retries: 5
 
 volumes:
-  postgres_data:
+  postgres_prod_data:
