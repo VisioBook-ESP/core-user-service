@@ -13,7 +13,6 @@ jobs:
   minikube:
     name: 🏗️ Deploy & Test ALL Charts on Minikube
     runs-on: ubuntu-latest
-    needs: kubeval
     steps:
       - uses: actions/checkout@v4
 
