@@ -52,7 +52,9 @@ class Profile(BaseModel):
 
     __tablename__ = "profiles"
 
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), unique=True, nullable=False
+    )
     first_name: Mapped[str | None] = mapped_column(String, nullable=True)
     last_name: Mapped[str | None] = mapped_column(String, nullable=True)
     avatar: Mapped[str | None] = mapped_column(String, nullable=True)  # URL to avatar image

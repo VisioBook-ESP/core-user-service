@@ -15,17 +15,17 @@ def create_test_users():
     """Create test users in the database."""
     # Create all tables
     BaseModel.metadata.create_all(bind=engine)
-    
+
     # Get database session
     db = next(get_db())
-    
+
     try:
         # Check if users already exist
         existing_admin = db.query(User).filter(User.email == "admin@visiobook.com").first()
         if existing_admin:
-            print("✅ Test users already exist in database")
+            print("Test users already exist in database")
             return
-        
+
         # Create test users with hashed passwords
         test_users = [
             {
@@ -53,7 +53,7 @@ def create_test_users():
                 "last_name": "Moderator",
             },
         ]
-        
+
         for user_data in test_users:
             # Create user with hashed password
             password_str = str(user_data["password"])  # Ensure it's a string
@@ -66,7 +66,7 @@ def create_test_users():
             db.add(user)
             db.commit()
             db.refresh(user)
-            
+
             # Create profile for the user
             profile = Profile(
                 user_id=user.id,
@@ -75,16 +75,20 @@ def create_test_users():
             )
             db.add(profile)
             db.commit()
-            
-            role_name = user_data["role"].value if hasattr(user_data["role"], 'value') else str(user_data["role"])
-            print(f"✅ Created user: {user_data['email']} ({role_name})")
-        
-        print("\n🎉 Test users created successfully!")
+
+            role_name = (
+                user_data["role"].value
+                if hasattr(user_data["role"], "value")
+                else str(user_data["role"])
+            )
+            print(f"Created user: {user_data['email']} ({role_name})")
+
+        print("\nTest users created successfully!")
         print("\nYou can now login with:")
-        print("  👑 admin@visiobook.com / admin123 (ADMIN)")
-        print("  👤 user@visiobook.com / user123 (USER)")
-        print("  🛡️  moderator@visiobook.com / moderator123 (MODERATOR)")
-        
+        print("admin@visiobook.com / admin123 (ADMIN)")
+        print("user@visiobook.com / user123 (USER)")
+        print("moderator@visiobook.com / moderator123 (MODERATOR)")
+
     except (HTTPException, ValueError) as exc:
         print(f"Error creating test users: {exc}")
         raise

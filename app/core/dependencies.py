@@ -2,6 +2,8 @@
 FastAPI dependencies for authentication and authorization.
 """
 
+from typing import Any
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -14,17 +16,17 @@ security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(security)
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> TokenData:
     """
     Extract and validate the current user from JWT token.
-    
+
     Args:
         credentials: Bearer token from Authorization header
-        
+
     Returns:
         TokenData: User information from the token
-        
+
     Raises:
         HTTPException: If token is invalid or expired
     """
@@ -34,17 +36,17 @@ async def get_current_user(
             detail="Token d'authentification requis",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     token = credentials.credentials
     payload = verify_token(token)
-    
+
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token invalide ou expiré",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return TokenData(
         user_id=payload.get("sub"),
         email=payload.get("email"),
@@ -52,28 +54,27 @@ async def get_current_user(
     )
 
 
-def require_role(required_role: UserRole) -> callable:
+def require_role(required_role: UserRole) -> Any:
     """
     Factory function to create role-based access control dependencies.
-    
+
     Args:
         required_role: The minimum role required to access the endpoint
-        
+
     Returns:
         Dependency function that validates user role
     """
-    async def role_checker(
-        current_user: TokenData = Depends(get_current_user)
-    ) -> TokenData:
+
+    async def role_checker(current_user: TokenData = Depends(get_current_user)) -> TokenData:
         """
         Check if the current user has the required role.
-        
+
         Args:
             current_user: Current authenticated user
-            
+
         Returns:
             TokenData: User information if authorized
-            
+
         Raises:
             HTTPException: If user doesn't have required role
         """
@@ -82,7 +83,7 @@ def require_role(required_role: UserRole) -> callable:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Rôle utilisateur manquant",
             )
-        
+
         try:
             user_role = UserRole(current_user.role)
         except ValueError as exc:
@@ -90,22 +91,22 @@ def require_role(required_role: UserRole) -> callable:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Rôle utilisateur invalide",
             ) from exc
-        
+
         # Check role hierarchy: ADMIN > MODERATOR > USER
         role_hierarchy = {
             UserRole.USER: 1,
             UserRole.MODERATOR: 2,
             UserRole.ADMIN: 3,
         }
-        
+
         if role_hierarchy.get(user_role, 0) < role_hierarchy.get(required_role, 999):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Accès refusé. Rôle requis : {required_role.value}",
             )
-        
+
         return current_user
-    
+
     return role_checker
 
 

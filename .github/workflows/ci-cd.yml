@@ -112,17 +112,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fail if Python debug leftovers exist (exclude ./.tests/unit/)
+      - name: Fail if Python debug leftovers exist (exclude ./.tests/unit/ and create_test_users.py)
         shell: bash
         run: |
           set -euo pipefail
-          # Cherche dans les fichiers Python suivis par Git, en excluant ./.tests/unit/
+          # Cherche dans les fichiers Python suivis par Git, en excluant ./.tests/unit/ et create_test_users.py
           if git grep -nI -E '(pdb\.set_trace\(|(^|[^[:alnum:]_])print\(|breakpoint\()' -- \
-              '*.py' ':(exclude).tests/unit/**'; then
-            echo "::error:: Python debug statements found outside ./.tests/unit/ (see matches above)." >&2
+              '*.py' ':(exclude).tests/unit/**' ':(exclude)create_test_users.py'; then
+            echo "::error:: Python debug statements found outside ./.tests/unit/ and create_test_users.py (see matches above)." >&2
             exit 1
           fi
-          echo "✅ No debug leftovers outside ./.tests/unit/"
+          echo "✅ No debug leftovers outside ./.tests/unit/ and create_test_users.py"
 
   # TODO: Réactiver quand les tests seront écrits
   docker-compose-and-unitests:
