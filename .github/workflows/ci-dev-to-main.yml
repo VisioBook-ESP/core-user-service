@@ -48,6 +48,7 @@ jobs:
       - name: Deploy core-user-service with postgres service on Minikube
         
         run: |
+          pwd
           cd charts
           ls  -la
           helm install core-user-service ./core-user-service/
