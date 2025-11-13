@@ -40,6 +40,7 @@ jobs:
           ls
           mkdir charts
           git clone https://x-access-token:${GH_TOKEN}@github.com/VisioBook-ESP/infra-helm-charts.git tmp-repo
+          ls 
           cp -r tmp-repo/environnement/dev/charts/ ./charts/postgresql-db
           cp -r tmp-repo/environnement/dev/charts/ ./charts/core-user-service
           ls -la ./charts/
