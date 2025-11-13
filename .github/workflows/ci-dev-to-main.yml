@@ -37,6 +37,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git clone https://x-access-token:${GH_TOKEN}@github.com/VisioBook-ESP/infra-helm-charts.git tmp-repo
+          ls -la ./charts/
           cp -r tmp-repo/environnement/dev/charts/postgresql-db ./charts/postgresql-db
           cp -r tmp-repo/environnement/dev/charts/core-user-service ./charts/core-user-service
           ls -la ./charts/
