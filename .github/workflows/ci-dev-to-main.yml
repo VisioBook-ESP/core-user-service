@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   minikube:
-    name: 🏗️ Deploy & Test ALL Charts on Minikube
+    name: 🏗️ Deploy & Test core-user-service with postgres service
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,3 +40,8 @@ jobs:
           cp -r tmp-repo/environnement/dev/charts/postgresql-db ./charts/
           cp -r tmp-repo/environnement/dev/charts/core-user-service ./charts/
           ls -la ./charts/
+
+      - name: Deploy core-user-service with postgres service on Minikube
+        run: |
+          helm install support-storage ./support-storage-service/
+          helm install postgresql-db ./postgresql-db/
