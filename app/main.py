@@ -82,7 +82,7 @@ def create_app() -> FastAPI:
         """Readiness check endpoint. Returns 'READY' if the service is ready to accept traffic."""
         return {"status": "READY"}
 
-    @application.get("/health-db")
+    @application.get("/health-db", response_model=None)
     def health_db() -> dict[str, str] | JSONResponse:
         """
         Database health check endpoint.
