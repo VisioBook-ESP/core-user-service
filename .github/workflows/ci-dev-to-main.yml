@@ -46,9 +46,9 @@ jobs:
           ls -la ./charts/
 
       - name: Deploy core-user-service with postgres service on Minikube
-        working-directory: ./charts
+        
         run: |
+          cd charts
           ls  -la
-          pwd
-          helm install support-storage ./core-user-service/
+          helm install core-user-service ./core-user-service/
           helm install postgresql-db ./postgresql-db/
