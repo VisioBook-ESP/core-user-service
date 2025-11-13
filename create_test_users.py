@@ -5,10 +5,10 @@ Run this once to populate the database with test users.
 
 from fastapi import HTTPException
 
-from app.core.database import get_db, engine
+from app.core.database import engine, get_db
 from app.core.security import get_password_hash
-from app.models.user import User, UserRole, Profile
 from app.models.base import BaseModel
+from app.models.user import Profile, User, UserRole
 
 
 def create_test_users():

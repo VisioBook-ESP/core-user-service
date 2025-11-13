@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_admin
 from app.core.security import get_password_hash
-from app.models.user import User, UserRole, Profile
+from app.models.user import Profile, User, UserRole
 from app.schemas.auth import TokenData
 from app.schemas.user import UserCreate, UserOut, UserUpdate
 
