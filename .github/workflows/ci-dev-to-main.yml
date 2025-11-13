@@ -38,9 +38,10 @@ jobs:
         run: |
           pwd
           ls
+          mkdir charts
           git clone https://x-access-token:${GH_TOKEN}@github.com/VisioBook-ESP/infra-helm-charts.git tmp-repo
-          cp -r tmp-repo/environnement/dev/charts/postgresql-db ./charts/postgresql-db
-          cp -r tmp-repo/environnement/dev/charts/core-user-service ./charts/core-user-service
+          cp -r tmp-repo/environnement/dev/charts/ ./charts/postgresql-db
+          cp -r tmp-repo/environnement/dev/charts/ ./charts/core-user-service
           ls -la ./charts/
 
       - name: Deploy core-user-service with postgres service on Minikube
