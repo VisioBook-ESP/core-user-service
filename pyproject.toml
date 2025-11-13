@@ -103,7 +103,11 @@ exclude = [".venv", "venv", "__pycache__"]
 [tool.ruff.lint]
 # E/F: base, I: isort, B: bugbear, UP: pyupgrade
 select = ["E", "F", "I", "B", "UP"]
-ignore = []
+ignore = ["B008"]  # B008: Depends() in defaults is standard FastAPI pattern
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore E501 (line too long) for Alembic migrations (auto-generated)
+"alembic/versions/*.py" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"

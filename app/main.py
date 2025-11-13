@@ -5,10 +5,15 @@ Initializes FastAPI app, CORS, health/ready endpoints, and API routers.
 
 from __future__ import annotations
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timezone
 
+from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+
+from app.api.v1.auth import router as auth_router
 from app.api.v1.users import router as users_router
+from app.core.database import SessionLocal
 from app.core.settings import settings
 
 
@@ -54,16 +59,53 @@ def create_app() -> FastAPI:
 
     @application.get("/health")
     def health() -> dict[str, str]:
-        """Health check endpoint. Returns 'UP' if the service is alive."""
-        return {"status": "UP"}
+        """
+        Health check endpoint with service metadata.
+
+        Returns:
+            status: "UP" if the service is alive
+            timestamp: Current UTC timestamp (ISO 8601)
+            service: Service name
+            version: Service version
+        """
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now(timezone.utc).isoformat(),  # noqa: UP017
+            "service": settings.service_name,
+            "version": settings.service_version,
+        }
 
     @application.get("/ready")
     def ready() -> dict[str, str]:
         """Readiness check endpoint. Returns 'READY' if the service is ready to accept traffic."""
         return {"status": "READY"}
 
+    @application.get("/health-db")
+    def health_db() -> dict[str, str]:
+        """
+        Database health check endpoint.
+
+        Executes a simple SQL query (SELECT 1) to verify database connectivity.
+
+        Returns:
+            200 OK with {"status": "healthy", "database": "connected"} if DB is accessible
+            503 Service Unavailable if DB connection fails
+        """
+        try:
+            db = SessionLocal()
+            db.execute(text("SELECT 1"))
+            db.close()
+            return {"status": "healthy", "database": "connected"}
+        except Exception as exc:
+            # Raise 503 Service Unavailable if DB is down
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Database unavailable: {str(exc)}",
+            ) from exc
+
     # Register API routers
     application.include_router(users_router)
+    application.include_router(auth_router)
 
     return application
 
