@@ -28,6 +28,19 @@ jobs:
         with:
           kubernetes-version: v1.30.1
 
+      - name: Install Istio CLI
+        run: |
+          ISTIO_VERSION="1.25.2"
+          curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} sh -
+          sudo mv istio-${ISTIO_VERSION}/bin/istioctl /usr/local/bin/istioctl
+          istioctl version
+
+      - name: Install Istio on Minikube
+        run: |
+          istioctl install --set profile=demo -y
+          kubectl label namespace default istio-injection=enabled
+          echo "✅ Istio installed and automatic sidecar injection enabled."
+
       - name: Set up Helm
         uses: azure/setup-helm@v3
         with:
@@ -48,7 +61,6 @@ jobs:
           ls -la ./charts/postgresql-db
 
       - name: Deploy core-user-service with postgres service on Minikube
-        
         run: |
           pwd
           cd charts
