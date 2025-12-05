@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 @router.get("/", response_model=list[UserOut])
 def list_users(
-    current_user: TokenData = Depends(require_admin), db: Session = Depends(get_db)
+    _current_user: TokenData = Depends(require_admin), db: Session = Depends(get_db)
 ) -> list[UserOut]:
     """Retrieve a list of users from database. (Admin only)"""
     # Query all users from database
