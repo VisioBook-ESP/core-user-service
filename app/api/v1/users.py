@@ -16,8 +16,10 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 @router.get("/", response_model=list[UserOut])
-def list_users(db: Session = Depends(get_db)) -> list[UserOut]:
-    """Retrieve a list of users from database."""
+def list_users(
+    current_user: TokenData = Depends(require_admin), db: Session = Depends(get_db)
+) -> list[UserOut]:
+    """Retrieve a list of users from database. (Admin only)"""
     # Query all users from database
     users = db.query(User).all()
 
@@ -77,8 +79,19 @@ def get_my_profile(
 
 
 @router.get("/{user_id}", response_model=UserOut)
-def get_user(user_id: int, db: Session = Depends(get_db)) -> UserOut:
-    """Retrieve a user by ID from database."""
+def get_user(
+    user_id: int,
+    current_user: TokenData = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserOut:
+    """Retrieve a user by ID from database. Can only view own profile or must be admin."""
+    # Check authorization: must be viewing own profile OR be an admin
+    if str(user_id) != current_user.user_id and current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view this user",
+        )
+
     # Query user from database using integer ID
     user = db.query(User).filter(User.id == user_id).first()
 
@@ -101,7 +114,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)) -> UserOut:
 
 @router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def create_user(dto: UserCreate, db: Session = Depends(get_db)) -> UserOut:
-    """Create a new user."""
+    """Create a new user. Public registration always creates users with 'user' role."""
     # Check if user already exists
     existing_user = (
         db.query(User).filter((User.email == dto.email) | (User.username == dto.username)).first()
@@ -113,12 +126,12 @@ def create_user(dto: UserCreate, db: Session = Depends(get_db)) -> UserOut:
             detail="User with this email or username already exists",
         )
 
-    # Create new user
+    # Create new user with forced USER role (ignore dto.role for security)
     user = User(
         email=dto.email,
         username=dto.username,
         password=get_password_hash(dto.password),
-        role=UserRole(dto.role),
+        role=UserRole.USER,  # Always create as USER, not dto.role
     )
     db.add(user)
     db.commit()
@@ -146,8 +159,30 @@ def create_user(dto: UserCreate, db: Session = Depends(get_db)) -> UserOut:
 
 
 @router.put("/{user_id}", response_model=UserOut)
-def update_user(user_id: int, dto: UserUpdate, db: Session = Depends(get_db)) -> UserOut:
-    """Update an existing user."""
+def update_user(
+    user_id: int,
+    dto: UserUpdate,
+    current_user: TokenData = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserOut:
+    """Update an existing user. Can only update own profile or must be admin."""
+    # Check authorization: must be updating own profile OR be an admin
+    is_own_profile = str(user_id) == current_user.user_id
+    is_admin = current_user.role == "admin"
+
+    if not is_own_profile and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this user",
+        )
+
+    # Prevent users from changing their own role (only admins can change roles)
+    if is_own_profile and not is_admin and dto.role is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot change your own role",
+        )
+
     # Find user in database
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
