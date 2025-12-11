@@ -2,7 +2,7 @@ name: CI Dev to Main
 
 on:
   pull_request:
-    branches: ["dev"]
+    branches: ["main"]
 
 permissions:
   contents: read
