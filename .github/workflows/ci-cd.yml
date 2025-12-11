@@ -1,0 +1,194 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["dev"]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  PYTHON_VERSION: "3.12.6"
+  IMAGE_REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/visiobook-esp/core-user-service-dev
+  DOCKERFILE_PROD: docker/Dockerfile.prod
+
+jobs:
+  formatage-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dev deps
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements-dev.txt
+      - name: Black (format check)
+        run: black --check app
+
+  ruff-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dev deps
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements-dev.txt
+      - name: Ruff (lint + import order)
+        run: ruff check app
+
+  pylint-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements-dev.txt
+      - name: Pylint
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: pylint app
+
+  types-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements-dev.txt
+      - name: Mypy (type check)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: mypy app
+
+  no-debug-leftovers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if Python debug leftovers exist (exclude ./.tests/unit/ and create_test_users.py)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Cherche dans les fichiers Python suivis par Git, en excluant ./.tests/unit/ et create_test_users.py
+          if git grep -nI -E '(pdb\.set_trace\(|(^|[^[:alnum:]_])print\(|breakpoint\()' -- \
+              '*.py' ':(exclude).tests/unit/**' ':(exclude)create_test_users.py'; then
+            echo "::error:: Python debug statements found outside ./.tests/unit/ and create_test_users.py (see matches above)." >&2
+            exit 1
+          fi
+          echo "✅ No debug leftovers outside ./.tests/unit/ and create_test_users.py"
+
+  # TODO: Réactiver quand les migrations seront exécutées en CI
+  # docker-compose-and-unitests:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: Create minimal .env for Docker Compose
+  #       run: |
+  #         cat > .env << 'EOF'
+  #         PYTHONPATH=/app
+  #         PYTHONUNBUFFERED=1
+  #         APP_ENV=test
+  #         EOF
+  #     - name: Build test services
+  #       run: docker compose -f docker-compose-prod.yml up --build -d
+  #     - name: Wait for services to be ready
+  #       run: |
+  #         echo "Waiting for PostgreSQL to be ready..."
+  #         timeout 60s bash -c 'until docker compose exec postgres pg_isready -U visiobook_user -d visiobook_users; do sleep 2; done'
+  #     - name: Run tests inside container
+  #       run: docker compose exec -T core-user-service python -m pytest tests/ --cov=app --cov-report=term-missing --cov-fail-under=0
+
+  docker-build-and-push:
+    runs-on: ubuntu-latest
+    needs:
+      [
+        formatage-check,
+        ruff-check,
+        pylint-check,
+        types-check,
+        no-debug-leftovers,
+      ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.IMAGE_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUBTOKEN }}
+
+      - name: Extract Docker metadata (tags/labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and push prod image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE_PROD }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

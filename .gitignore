@@ -1,0 +1,65 @@
+# ============================
+# Environnements virtuels
+# ============================
+.venv/
+env/
+venv/
+
+# ============================
+# Fichiers d'environnement
+# ============================
+.env
+.env.*
+!.env.example
+
+# ============================
+# Fichiers Python
+# ============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# ============================
+# Rapports & couverture tests
+# ============================
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
+.tox/
+.nox/
+
+# ============================
+# Typage & lint caches
+# ============================
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# ============================
+# Sécurité / audit
+# ============================
+.bandit/
+.safety/
+
+# ============================
+# Logs
+# ============================
+*.log
+
+# ============================
+# IDE / éditeurs
+# ============================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ============================
+# OS spécifiques
+# =================

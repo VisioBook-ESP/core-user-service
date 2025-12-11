@@ -1,0 +1,21 @@
+{
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+  "include": ["app", "alembic", "tests", "create_test_users.py"],
+  "exclude": [".venv", "**/__pycache__"],
+  "reportMissingTypeStubs": false,
+  "reportUnknownMemberType": false,
+  "reportGeneralTypeIssues": false,
+  "reportOptionalMemberAccess": false,
+  "reportPrivateImportUsage": false,
+  "reportUnknownParameterType": false,
+  "reportUnknownArgumentType": false,
+  "reportUnknownVariableType": false,
+  "reportAttributeAccessIssue": false,
+
+  "executionEnvironments": [
+    {
+      "root": "."
+    }
+  ]
+}
