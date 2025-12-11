@@ -7,9 +7,11 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.v1.auth import router as auth_router
 from app.api.v1.users import router as users_router
@@ -80,8 +82,8 @@ def create_app() -> FastAPI:
         """Readiness check endpoint. Returns 'READY' if the service is ready to accept traffic."""
         return {"status": "READY"}
 
-    @application.get("/health-db")
-    def health_db() -> dict[str, str]:
+    @application.get("/health-db", response_model=None)
+    def health_db() -> dict[str, str] | JSONResponse:
         """
         Database health check endpoint.
 
@@ -89,19 +91,24 @@ def create_app() -> FastAPI:
 
         Returns:
             200 OK with {"status": "healthy", "database": "connected"} if DB is accessible
-            503 Service Unavailable if DB connection fails
+            503 with structured error details if DB fails
         """
         try:
             db = SessionLocal()
             db.execute(text("SELECT 1"))
             db.close()
             return {"status": "healthy", "database": "connected"}
-        except Exception as exc:
-            # Raise 503 Service Unavailable if DB is down
-            raise HTTPException(
+        except SQLAlchemyError as exc:
+            # Return 503 Service Unavailable with readable error details
+            return JSONResponse(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Database unavailable: {str(exc)}",
-            ) from exc
+                content={
+                    "status": "unhealthy",
+                    "database": "disconnected",
+                    "error": str(exc),
+                    "code": status.HTTP_503_SERVICE_UNAVAILABLE,
+                },
+            )
 
     # Register API routers
     application.include_router(users_router)

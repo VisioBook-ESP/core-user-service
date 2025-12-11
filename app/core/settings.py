@@ -3,6 +3,12 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    """
+    Application settings loaded from environment variables.
+    Required: DATABASE_URL must be set in .env or environment.
+    See .env.example for configuration template.
+    """
+
     # Application settings
     service_name: str = "core-user-service"
     service_version: str = "1.0.0"
@@ -12,7 +18,7 @@ class Settings(BaseSettings):
     cors_origins: list[AnyHttpUrl] | list[str] = []
 
     # Database settings
-    database_url: str = "postgresql://visiobook_user:visiobook_pass@localhost:5432/visiobook_users"
+    database_url: str = ""  # Loaded from .env, empty default for validation
     database_echo: bool = False  # Set to True for SQL query logging
 
     # Security settings
