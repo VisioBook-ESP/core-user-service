@@ -1,21 +1,20 @@
-name: CI Dev to Main
+name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["dev"]
 
 permissions:
   contents: read
   packages: write
 
 env:
-
+  PYTHON_VERSION: "3.12.6"
   IMAGE_REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/visiobook-esp/core-user-service-prod
+  IMAGE_NAME: ghcr.io/visiobook-esp/core-user-service-dev
   DOCKERFILE_PROD: docker/Dockerfile.prod
 
-jobs:
- 
+jobs: 
   docker-build-and-push:
     runs-on: ubuntu-latest
     steps:
