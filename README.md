@@ -9,7 +9,7 @@ Développé avec **Python 3.12.6** et **FastAPI**, il gère l'authentification, 
 ## 🚀 Features
 
 - **API REST** en FastAPI avec documentation automatique
-- **Base de données PostgreSQL** avec migrations Alembic
+- **Base de données PostgreSQL** avec schema dédié `core_user_service` et migrations Alembic
 - **Modèles SQLAlchemy 2.0** avec types modernes (Mapped[])
 - **Gestion des utilisateurs** (CRUD, rôles : admin, user)
 - **Endpoints de healthcheck** (`/health`, `/ready`, `/health-db`)
@@ -301,9 +301,9 @@ Une fois le service démarré, la documentation interactive est disponible :
 ### Stack technologique
 
 - **Framework** : FastAPI 0.115+
-- **Base de données** : PostgreSQL 15
+- **Base de données** : PostgreSQL 15 (schema dédié `core_user_service`)
 - **ORM** : SQLAlchemy 2.0 avec syntaxe moderne
-- **Migrations** : Alembic
+- **Migrations** : Alembic (schema-aware)
 - **Tests** : Pytest + Coverage
 - **Sécurité** : JWT RS256 (asymétrique) + bcrypt + JWKS
 - **Conteneurisation** : Docker + Docker Compose
@@ -319,8 +319,8 @@ app/
 │   ├── keys.py          # Gestion clés RSA et JWKS
 │   ├── security.py      # JWT RS256 et hash passwords
 │   └── settings.py      # Variables d'environnement
-├── models/              # Modèles SQLAlchemy
-│   ├── base.py          # Modèle de base
+├── models/              # Modèles SQLAlchemy (schema: core_user_service)
+│   ├── base.py          # Modèle de base + déclaration du schema
 │   └── user.py          # User et Profile models
 ├── schemas/             # Schémas Pydantic (DTOs)
 ├── services/            # Logique métier

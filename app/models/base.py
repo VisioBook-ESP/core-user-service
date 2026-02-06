@@ -6,12 +6,16 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, text
+from sqlalchemy import DateTime, Integer, MetaData, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+SCHEMA_NAME = "core_user_service"
 
 
 class Base(DeclarativeBase):
     """Base class for all database models."""
+
+    metadata = MetaData(schema=SCHEMA_NAME)
 
 
 class BaseModel(Base):
