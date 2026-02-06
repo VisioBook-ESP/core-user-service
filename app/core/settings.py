@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     rsa_private_key: str = ""  # PEM-encoded RSA private key (env: RSA_PRIVATE_KEY)
     jwt_algorithm: str = "RS256"
     jwt_kid: str = "visiobook-key-1"
-    jwt_issuer: str = "visiobook-auth"
+    jwt_issuer: str = "core-user-service"
     access_token_expire_minutes: int = 30
 
     model_config = {"env_file": ".env", "case_sensitive": False, "extra": "ignore"}

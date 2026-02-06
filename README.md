@@ -128,7 +128,7 @@ DATABASE_URL=postgresql://user:password@host:5432/database_name
 RSA_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
 JWT_ALGORITHM=RS256
 JWT_KID=visiobook-key-1
-JWT_ISSUER=visiobook-auth
+JWT_ISSUER=core-user-service
 ```
 
 > **Note** : En environnement `dev`, si `RSA_PRIVATE_KEY` est vide, une clé éphémère est auto-générée. En production, la clé RSA est **obligatoire**.

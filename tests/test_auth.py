@@ -142,7 +142,7 @@ class TestJWTTokens:
         assert payload["sub"] == "1"  # user_id - now using integer IDs as strings
         assert payload["email"] == "admin@visiobook.com"
         assert payload["role"] == "admin"
-        assert payload["iss"] == "visiobook-auth"
+        assert payload["iss"] == "core-user-service"
         assert "exp" in payload  # expiration time
 
     def test_expired_token_rejected(self):
