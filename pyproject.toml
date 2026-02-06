@@ -39,6 +39,7 @@ disable = [
   "C0115",  # missing-class-docstring
   "C0116",  # missing-function-docstring
   "R0903",  # too-few-public-methods (normal for models/data classes)
+  "R0801",  # duplicate-code (similar CRUD patterns across endpoints are acceptable)
 ]
 
 # Ignore invalid-name for alembic migration files (auto-generated names)

@@ -23,18 +23,7 @@ def list_users(
     # Query all users from database
     users = db.query(User).all()
 
-    # Convert database models to response schemas
-    return [
-        UserOut(
-            id=str(user.id),  # Convert int to string for API compatibility
-            email=user.email,
-            username=user.username,
-            role=user.role.value,
-            first_name=user.profile.first_name if user.profile else None,
-            last_name=user.profile.last_name if user.profile else None,
-        )
-        for user in users
-    ]
+    return [UserOut.from_model(user) for user in users]
 
 
 @router.get("/me", response_model=UserOut)
@@ -67,15 +56,64 @@ def get_my_profile(
             detail="User profile not found",
         )
 
-    # Convert database model to response schema
-    return UserOut(
-        id=str(user.id),
-        email=user.email,
-        username=user.username,
-        role=user.role.value,
-        first_name=user.profile.first_name if user.profile else None,
-        last_name=user.profile.last_name if user.profile else None,
-    )
+    return UserOut.from_model(user)
+
+
+@router.put("/me", response_model=UserOut)
+def update_my_profile(
+    dto: UserUpdate,
+    current_user: TokenData = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserOut:
+    """Update the current user's own profile."""
+    if not current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user token",
+        )
+
+    try:
+        user_id = int(current_user.user_id)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user token format",
+        ) from exc
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    # Users cannot change their own role
+    if dto.role is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot change your own role",
+        )
+
+    if dto.email is not None:
+        user.email = dto.email
+    if dto.username is not None:
+        user.username = dto.username
+    if dto.password is not None:
+        user.password = get_password_hash(dto.password)
+
+    if dto.first_name is not None or dto.last_name is not None:
+        if not user.profile:
+            user.profile = Profile(user_id=user.id)
+            db.add(user.profile)
+        if dto.first_name is not None:
+            user.profile.first_name = dto.first_name
+        if dto.last_name is not None:
+            user.profile.last_name = dto.last_name
+
+    db.commit()
+    db.refresh(user)
+
+    return UserOut.from_model(user)
 
 
 @router.get("/{user_id}", response_model=UserOut)
@@ -101,20 +139,16 @@ def get_user(
             detail="User not found",
         )
 
-    # Convert database model to response schema
-    return UserOut(
-        id=str(user.id),
-        email=user.email,
-        username=user.username,
-        role=user.role.value,
-        first_name=user.profile.first_name if user.profile else None,
-        last_name=user.profile.last_name if user.profile else None,
-    )
+    return UserOut.from_model(user)
 
 
 @router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def create_user(dto: UserCreate, db: Session = Depends(get_db)) -> UserOut:
-    """Create a new user. Public registration always creates users with 'user' role."""
+def create_user(
+    dto: UserCreate,
+    _current_user: TokenData = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> UserOut:
+    """Create a new user. (Admin only)"""
     # Check if user already exists
     existing_user = (
         db.query(User).filter((User.email == dto.email) | (User.username == dto.username)).first()
@@ -148,14 +182,7 @@ def create_user(dto: UserCreate, db: Session = Depends(get_db)) -> UserOut:
         db.commit()
         db.refresh(user)  # Refresh to include profile
 
-    return UserOut(
-        id=str(user.id),
-        email=user.email,
-        username=user.username,
-        role=user.role.value,
-        first_name=user.profile.first_name if user.profile else None,
-        last_name=user.profile.last_name if user.profile else None,
-    )
+    return UserOut.from_model(user)
 
 
 @router.put("/{user_id}", response_model=UserOut)
@@ -215,14 +242,7 @@ def update_user(
     db.commit()
     db.refresh(user)
 
-    return UserOut(
-        id=str(user.id),
-        email=user.email,
-        username=user.username,
-        role=user.role.value,
-        first_name=user.profile.first_name if user.profile else None,
-        last_name=user.profile.last_name if user.profile else None,
-    )
+    return UserOut.from_model(user)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

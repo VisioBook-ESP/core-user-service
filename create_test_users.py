@@ -44,14 +44,6 @@ def create_test_users():
                 "first_name": "Bob",
                 "last_name": "User",
             },
-            {
-                "email": "moderator@visiobook.com",
-                "username": "moderator",
-                "password": "moderator123",  # Will be hashed
-                "role": UserRole.MODERATOR,
-                "first_name": "Charlie",
-                "last_name": "Moderator",
-            },
         ]
 
         for user_data in test_users:
@@ -87,7 +79,6 @@ def create_test_users():
         print("\nYou can now login with:")
         print("admin@visiobook.com / admin123 (ADMIN)")
         print("user@visiobook.com / user123 (USER)")
-        print("moderator@visiobook.com / moderator123 (MODERATOR)")
 
     except (HTTPException, ValueError) as exc:
         print(f"Error creating test users: {exc}")

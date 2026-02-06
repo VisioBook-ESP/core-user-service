@@ -21,9 +21,11 @@ class Settings(BaseSettings):
     database_url: str = ""  # Loaded from .env, empty default for validation
     database_echo: bool = False  # Set to True for SQL query logging
 
-    # Security settings
-    secret_key: str = "your-secret-key-change-in-production"
-    algorithm: str = "HS256"
+    # Security settings (RS256)
+    rsa_private_key: str = ""  # PEM-encoded RSA private key (env: RSA_PRIVATE_KEY)
+    jwt_algorithm: str = "RS256"
+    jwt_kid: str = "visiobook-key-1"
+    jwt_issuer: str = "visiobook-auth"
     access_token_expire_minutes: int = 30
 
     model_config = {"env_file": ".env", "case_sensitive": False, "extra": "ignore"}

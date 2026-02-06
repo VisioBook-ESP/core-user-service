@@ -71,11 +71,11 @@ def _save_data(data: list[UserRecordOptional]) -> None:
 
 def _ensure_literal_role(value: str | None) -> UserRole:
     """
-    Coerce arbitrary string to allowed literal role ('admin'|'user'|'moderator'),
+    Coerce arbitrary string to allowed literal role ('admin'|'user'),
     defaulting to 'user' if missing/invalid.
     """
     raw = (value or "user").lower()
-    if raw not in {"admin", "user", "moderator"}:
+    if raw not in {"admin", "user"}:
         raw = "user"
     return cast("UserRole", raw)
 

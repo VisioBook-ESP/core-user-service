@@ -17,7 +17,6 @@ class UserRole(enum.Enum):
 
     USER = "user"
     ADMIN = "admin"
-    MODERATOR = "moderator"
 
 
 class User(BaseModel):
