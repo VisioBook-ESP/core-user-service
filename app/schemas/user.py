@@ -4,12 +4,17 @@ All required fields are truly required for creation.
 Role defaults to 'user' if omitted.
 """
 
-from typing import Annotated, Literal
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, EmailStr, Field
 
+if TYPE_CHECKING:
+    from app.models.user import User
+
 # Allowed roles for users
-UserRole = Literal["admin", "user", "moderator"]
+UserRole = Literal["admin", "user"]
 
 
 class UserBase(BaseModel):
@@ -50,3 +55,15 @@ class UserOut(BaseModel):
     # Profile fields (optional)
     first_name: str | None = None
     last_name: str | None = None
+
+    @classmethod
+    def from_model(cls, user: User) -> UserOut:
+        """Build a UserOut from a SQLAlchemy User model."""
+        return cls(
+            id=str(user.id),
+            email=user.email,
+            username=user.username,
+            role=user.role.value,
+            first_name=user.profile.first_name if user.profile else None,
+            last_name=user.profile.last_name if user.profile else None,
+        )

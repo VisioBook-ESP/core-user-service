@@ -22,7 +22,7 @@
     "email": "john.smith@visiobook.com",
     "username": "john",
     "password": "hashedpassword789",
-    "role": "moderator",
+    "role": "user",
     "first_name": "John",
     "last_name": "Smith"
   },

@@ -16,7 +16,7 @@ class TestAuthEndpoints:
     def test_login_success_admin(self):
         """Test successful login with admin credentials."""
         response = client.post(
-            "/auth/login", json={"email": "admin@visiobook.com", "password": "admin123"}
+            "/api/v1/auth/login", json={"email": "admin@visiobook.com", "password": "admin123"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -31,7 +31,7 @@ class TestAuthEndpoints:
     def test_login_success_user(self):
         """Test successful login with user credentials."""
         response = client.post(
-            "/auth/login", json={"email": "user@visiobook.com", "password": "user123"}
+            "/api/v1/auth/login", json={"email": "user@visiobook.com", "password": "user123"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -40,22 +40,10 @@ class TestAuthEndpoints:
         assert data["role"] == "user"
         assert data["user_id"] == "2"  # Now using integer IDs as strings
 
-    def test_login_success_moderator(self):
-        """Test successful login with moderator credentials."""
-        response = client.post(
-            "/auth/login", json={"email": "moderator@visiobook.com", "password": "moderator123"}
-        )
-        assert response.status_code == 200
-        data = response.json()
-
-        assert "access_token" in data
-        assert data["role"] == "moderator"
-        assert data["user_id"] == "3"  # Now using integer IDs as strings
-
     def test_login_invalid_email(self):
         """Test login with invalid email."""
         response = client.post(
-            "/auth/login", json={"email": "nonexistent@example.com", "password": "admin123"}
+            "/api/v1/auth/login", json={"email": "nonexistent@example.com", "password": "admin123"}
         )
         assert response.status_code == 401
         assert "Email ou mot de passe incorrect" in response.json()["detail"]
@@ -63,7 +51,7 @@ class TestAuthEndpoints:
     def test_login_invalid_password(self):
         """Test login with invalid password."""
         response = client.post(
-            "/auth/login", json={"email": "admin@visiobook.com", "password": "wrongpassword"}
+            "/api/v1/auth/login", json={"email": "admin@visiobook.com", "password": "wrongpassword"}
         )
         assert response.status_code == 401
         assert "Email ou mot de passe incorrect" in response.json()["detail"]
@@ -71,7 +59,7 @@ class TestAuthEndpoints:
     def test_login_invalid_email_format(self):
         """Test login with invalid email format."""
         response = client.post(
-            "/auth/login", json={"email": "not-an-email", "password": "admin123"}
+            "/api/v1/auth/login", json={"email": "not-an-email", "password": "admin123"}
         )
         assert response.status_code == 422  # Validation error
 
@@ -84,10 +72,9 @@ class TestProtectedRoutes:
         credentials = {
             "admin": {"email": "admin@visiobook.com", "password": "admin123"},
             "user": {"email": "user@visiobook.com", "password": "user123"},
-            "moderator": {"email": "moderator@visiobook.com", "password": "moderator123"},
         }
 
-        response = client.post("/auth/login", json=credentials[user_type])
+        response = client.post("/api/v1/auth/login", json=credentials[user_type])
         assert response.status_code == 200
         return response.json()["access_token"]
 
@@ -132,17 +119,6 @@ class TestProtectedRoutes:
         assert response.status_code == 403
         assert "Accès refusé" in response.json()["detail"]
 
-    def test_delete_user_as_moderator_forbidden(self):
-        """Test that moderators cannot delete users (only admins can)."""
-        token = self._get_token("moderator")
-
-        response = client.delete(
-            "/api/v1/users/999",  # Use integer ID instead of string
-            headers={"Authorization": f"Bearer {token}"},
-        )
-        assert response.status_code == 403
-        assert "Accès refusé" in response.json()["detail"]
-
     def test_delete_user_no_token(self):
         """Test deleting user without authentication."""
         response = client.delete("/api/v1/users/999")  # Use integer ID
@@ -156,7 +132,7 @@ class TestJWTTokens:
         """Test that JWT token contains correct user data."""
         # Get a token
         response = client.post(
-            "/auth/login", json={"email": "admin@visiobook.com", "password": "admin123"}
+            "/api/v1/auth/login", json={"email": "admin@visiobook.com", "password": "admin123"}
         )
         token = response.json()["access_token"]
 
@@ -166,6 +142,7 @@ class TestJWTTokens:
         assert payload["sub"] == "1"  # user_id - now using integer IDs as strings
         assert payload["email"] == "admin@visiobook.com"
         assert payload["role"] == "admin"
+        assert payload["iss"] == "core-user-service"
         assert "exp" in payload  # expiration time
 
     def test_expired_token_rejected(self):
@@ -179,3 +156,22 @@ class TestJWTTokens:
             "/api/v1/users/me", headers={"Authorization": f"Bearer {invalid_token}"}
         )
         assert response.status_code == 401
+
+
+class TestJWKSEndpoint:
+    """Test JWKS endpoint."""
+
+    def test_jwks_endpoint(self):
+        """Test that JWKS endpoint returns valid key set."""
+        response = client.get("/api/v1/auth/.well-known/jwks.json")
+        assert response.status_code == 200
+        data = response.json()
+        assert "keys" in data
+        assert len(data["keys"]) == 1
+        key = data["keys"][0]
+        assert key["kty"] == "RSA"
+        assert key["use"] == "sig"
+        assert key["alg"] == "RS256"
+        assert "n" in key
+        assert "e" in key
+        assert "kid" in key

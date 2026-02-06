@@ -11,9 +11,10 @@ Développé avec **Python 3.12.6** et **FastAPI**, il gère l'authentification, 
 - **API REST** en FastAPI avec documentation automatique
 - **Base de données PostgreSQL** avec migrations Alembic
 - **Modèles SQLAlchemy 2.0** avec types modernes (Mapped[])
-- **Gestion des utilisateurs** (CRUD, rôles : admin, user, moderator)
+- **Gestion des utilisateurs** (CRUD, rôles : admin, user)
 - **Endpoints de healthcheck** (`/health`, `/ready`, `/health-db`)
-- **Authentification JWT** et hashage de mots de passe sécurisé
+- **Authentification JWT RS256** (asymétrique) avec endpoint JWKS pour la vérification inter-services
+- **Hashage de mots de passe** sécurisé (bcrypt)
 - **Configuration externalisée** via `.env`
 - **Tests automatisés** avec pytest et couverture
 - **Qualité de code parfaite** : Pylint 10/10, MyPy strict, Ruff
@@ -124,7 +125,13 @@ docker build -f docker/Dockerfile.prod -t core-user-service:latest .
 
 ```bash
 DATABASE_URL=postgresql://user:password@host:5432/database_name
+RSA_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+JWT_ALGORITHM=RS256
+JWT_KID=visiobook-key-1
+JWT_ISSUER=core-user-service
 ```
+
+> **Note** : En environnement `dev`, si `RSA_PRIVATE_KEY` est vide, une clé éphémère est auto-générée. En production, la clé RSA est **obligatoire**.
 
 #### 3. Exécuter les migrations de base de données
 
@@ -259,18 +266,33 @@ Une fois le service démarré, la documentation interactive est disponible :
 
 ### Endpoints disponibles
 
+#### Health
+
 | Endpoint | Méthode | Description |
 |----------|---------|-------------|
 | `/health` | GET | Health check du service |
 | `/ready` | GET | Readiness check |
 | `/health-db` | GET | Health check de la base de données |
-| `/api/v1/users/` | GET | Liste des utilisateurs |
-| `/api/v1/users/` | POST | Créer un utilisateur |
-| `/api/v1/users/{user_id}` | GET | Récupérer un utilisateur |
-| `/api/v1/users/{user_id}` | PUT | Modifier un utilisateur |
-| `/api/v1/users/{user_id}` | DELETE | Supprimer un utilisateur |
-| `/api/v1/auth/register` | POST | Inscription |
-| `/api/v1/auth/login` | POST | Connexion (JWT) |
+
+#### Authentification (publiques)
+
+| Endpoint | Méthode | Description |
+|----------|---------|-------------|
+| `/api/v1/auth/login` | POST | Connexion (retourne un JWT RS256) |
+| `/api/v1/auth/register` | POST | Inscription (crée un user avec le rôle `user`) |
+| `/api/v1/auth/.well-known/jwks.json` | GET | Clé publique JWKS pour vérification des tokens |
+
+#### Utilisateurs (protégées)
+
+| Endpoint | Méthode | Protection | Description |
+|----------|---------|------------|-------------|
+| `/api/v1/users/` | GET | Admin only | Liste des utilisateurs |
+| `/api/v1/users/` | POST | Admin only | Créer un utilisateur |
+| `/api/v1/users/me` | GET | Authentifié | Mon profil |
+| `/api/v1/users/me` | PUT | Authentifié | Modifier mon profil (rôle non modifiable) |
+| `/api/v1/users/{user_id}` | GET | Propre profil ou admin | Récupérer un utilisateur |
+| `/api/v1/users/{user_id}` | PUT | Propre profil ou admin | Modifier un utilisateur |
+| `/api/v1/users/{user_id}` | DELETE | Admin only | Supprimer un utilisateur |
 
 ---
 
@@ -283,7 +305,7 @@ Une fois le service démarré, la documentation interactive est disponible :
 - **ORM** : SQLAlchemy 2.0 avec syntaxe moderne
 - **Migrations** : Alembic
 - **Tests** : Pytest + Coverage
-- **Sécurité** : JWT + bcrypt
+- **Sécurité** : JWT RS256 (asymétrique) + bcrypt + JWKS
 - **Conteneurisation** : Docker + Docker Compose
 
 ### Structure du projet
@@ -293,7 +315,9 @@ app/
 ├── api/v1/              # API routes et controllers
 ├── core/                # Configuration et settings
 │   ├── database.py      # Configuration DB et sessions
-│   ├── security.py      # JWT et hash passwords
+│   ├── dependencies.py  # Dépendances FastAPI (auth, RBAC)
+│   ├── keys.py          # Gestion clés RSA et JWKS
+│   ├── security.py      # JWT RS256 et hash passwords
 │   └── settings.py      # Variables d'environnement
 ├── models/              # Modèles SQLAlchemy
 │   ├── base.py          # Modèle de base
@@ -339,13 +363,18 @@ Il s'exécute automatiquement sur chaque **Pull Request vers `dev`** :
 
 ## 🔒 Sécurité
 
+- **JWT RS256 (asymétrique)** : la clé privée signe les tokens, la clé publique les vérifie
+  - Les autres microservices vérifient les tokens via l'endpoint JWKS (`/api/v1/auth/.well-known/jwks.json`)
+  - En dev, une clé éphémère est auto-générée si `RSA_PRIVATE_KEY` est vide
+  - En production, `RSA_PRIVATE_KEY` est obligatoire (via Kubernetes Secret)
+- **Rôles** : `admin` et `user` — contrôle d'accès sur chaque endpoint
 - **Variables sensibles** jamais en dur dans le code (utilisation de `.env`)
 - **Vérifications automatiques** avec :
   - `bandit` : Analyse du code source pour les vulnérabilités
   - `safety` : Scan des dépendances pour les CVE connus
   - `pip-audit` : Audit moderne des packages
 - **Pas de debug** en production (interdiction de `print()`, `breakpoint()`, etc.)
-- **Configuration CORS** et **JWT**
+- **Configuration CORS**
 
 ---
 

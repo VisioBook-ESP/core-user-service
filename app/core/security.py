@@ -8,6 +8,7 @@ from typing import Any
 import jwt
 from passlib.context import CryptContext
 
+from app.core.keys import private_key, public_key
 from app.core.settings import settings
 
 # Password hashing
@@ -34,8 +35,13 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
     else:
         expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
 
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    to_encode.update({"exp": expire, "iss": settings.jwt_issuer})
+    encoded_jwt = jwt.encode(
+        to_encode,
+        private_key,
+        algorithm=settings.jwt_algorithm,
+        headers={"kid": settings.jwt_kid},
+    )
     return encoded_jwt
 
 
@@ -43,7 +49,10 @@ def verify_token(token: str) -> dict[str, Any] | None:
     """Verify and decode a JWT token."""
     try:
         payload: dict[str, Any] = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.algorithm]
+            token,
+            public_key,
+            algorithms=[settings.jwt_algorithm],
+            issuer=settings.jwt_issuer,
         )
         return payload
     except jwt.PyJWTError:

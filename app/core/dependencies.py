@@ -92,11 +92,10 @@ def require_role(required_role: UserRole) -> Any:
                 detail="Rôle utilisateur invalide",
             ) from exc
 
-        # Check role hierarchy: ADMIN > MODERATOR > USER
+        # Check role hierarchy: ADMIN > USER
         role_hierarchy = {
             UserRole.USER: 1,
-            UserRole.MODERATOR: 2,
-            UserRole.ADMIN: 3,
+            UserRole.ADMIN: 2,
         }
 
         if role_hierarchy.get(user_role, 0) < role_hierarchy.get(required_role, 999):
@@ -112,5 +111,4 @@ def require_role(required_role: UserRole) -> Any:
 
 # Common role dependencies
 require_admin = require_role(UserRole.ADMIN)
-require_moderator = require_role(UserRole.MODERATOR)
 require_user = require_role(UserRole.USER)
