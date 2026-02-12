@@ -22,11 +22,9 @@ class TokenResponse(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "token_type": "bearer",
                 "expires_in": 86400,
-                "user_id": "1",
-                "role": "admin",
             }
         }
     )
@@ -34,8 +32,6 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int  # Duration in seconds
-    user_id: str
-    role: str
 
 
 class TokenData(BaseModel):

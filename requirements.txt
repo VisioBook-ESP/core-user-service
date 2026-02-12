@@ -23,7 +23,6 @@ cryptography>=42.0
 # Logging
 python-json-logger==2.*
 PyJWT==2.*
-passlib[bcrypt]==1.*
 
 # Monitoring / metrics
 prometheus-client==0.*
