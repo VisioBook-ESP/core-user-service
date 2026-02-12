@@ -32,9 +32,10 @@ COPY --from=builder /app/app ./app
 COPY --from=builder /app/tests ./tests
 COPY --from=builder /app/alembic ./alembic
 COPY --from=builder /app/alembic.ini ./alembic.ini
+COPY --from=builder /app/docker/entrypoint.sh ./entrypoint.sh
 
 # Give appuser write permissions to the working directory
-RUN chown -R appuser:appgroup /app
+RUN chmod +x ./entrypoint.sh && chown -R appuser:appgroup /app
 
 ENV PATH=/venv/bin:$PATH \
     PYTHONPATH=/app
@@ -45,4 +46,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD python -c "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8080/health').getcode()==200 else sys.exit(1)"
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+ENTRYPOINT ["./entrypoint.sh"]

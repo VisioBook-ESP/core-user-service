@@ -9,7 +9,7 @@ import enum
 from sqlalchemy import Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import BaseModel
+from .base import SCHEMA_NAME, BaseModel
 
 
 class UserRole(enum.Enum):
@@ -52,7 +52,7 @@ class Profile(BaseModel):
     __tablename__ = "profiles"
 
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), unique=True, nullable=False
+        Integer, ForeignKey(f"{SCHEMA_NAME}.users.id"), unique=True, nullable=False
     )
     first_name: Mapped[str | None] = mapped_column(String, nullable=True)
     last_name: Mapped[str | None] = mapped_column(String, nullable=True)

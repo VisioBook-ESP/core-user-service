@@ -15,7 +15,7 @@ from app.schemas.user import UserCreate, UserOut, UserUpdate
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
-@router.get("/", response_model=list[UserOut])
+@router.get("", response_model=list[UserOut])
 def list_users(
     _current_user: TokenData = Depends(require_admin), db: Session = Depends(get_db)
 ) -> list[UserOut]:
@@ -142,7 +142,7 @@ def get_user(
     return UserOut.from_model(user)
 
 
-@router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def create_user(
     dto: UserCreate,
     _current_user: TokenData = Depends(require_admin),
