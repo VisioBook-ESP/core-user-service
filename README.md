@@ -133,64 +133,15 @@ JWT_ISSUER=core-user-service
 
 > **Note** : En environnement `dev`, si `RSA_PRIVATE_KEY` est vide, une clé éphémère est auto-générée. En production, la clé RSA est **obligatoire**.
 
-#### 3. Exécuter les migrations de base de données
+#### 3. Migrations de base de données
 
-**IMPORTANT** : Les migrations doivent être exécutées **AVANT** le premier démarrage de l'application et à chaque déploiement d'une nouvelle version.
+Les migrations sont exécutées **automatiquement** au démarrage du container via l'entrypoint (`docker/entrypoint.sh`). A chaque déploiement, `alembic upgrade head` est lancé avant le démarrage de l'application.
+
+Les tables sont créées dans le schema PostgreSQL `core_user_service` (pas dans `public`).
 
 ```bash
-# Option A : Commande Docker directe
-docker run --rm \
-  -e DATABASE_URL=postgresql://user:pass@host:5432/dbname \
-  core-user-service:latest \
-  alembic upgrade head
-
-# Option B : Kubernetes initContainer
-# Voir exemple ci-dessous
-```
-
-**Exemple de configuration Kubernetes avec initContainer :**
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: core-user-service
-spec:
-  template:
-    spec:
-      initContainers:
-      - name: migrations
-        image: core-user-service:latest
-        command: ["alembic", "upgrade", "head"]
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-credentials
-              key: database-url
-      containers:
-      - name: app
-        image: core-user-service:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-credentials
-              key: database-url
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 10
+# Pour lancer manuellement (debug / développement local) :
+alembic upgrade head
 ```
 
 #### 4. Lancer l'application
@@ -286,8 +237,8 @@ Une fois le service démarré, la documentation interactive est disponible :
 
 | Endpoint | Méthode | Protection | Description |
 |----------|---------|------------|-------------|
-| `/api/v1/users/` | GET | Admin only | Liste des utilisateurs |
-| `/api/v1/users/` | POST | Admin only | Créer un utilisateur |
+| `/api/v1/users` | GET | Admin only | Liste des utilisateurs |
+| `/api/v1/users` | POST | Admin only | Créer un utilisateur |
 | `/api/v1/users/me` | GET | Authentifié | Mon profil |
 | `/api/v1/users/me` | PUT | Authentifié | Modifier mon profil (rôle non modifiable) |
 | `/api/v1/users/{user_id}` | GET | Propre profil ou admin | Récupérer un utilisateur |

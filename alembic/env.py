@@ -1,6 +1,6 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, text
 
 from alembic import context
 from app.core.settings import settings
@@ -72,6 +72,10 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        # Create schema before Alembic tries to use it for the version table
+        connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA_NAME}"))
+        connection.commit()
+
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
