@@ -57,8 +57,6 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)) -> Tok
     return TokenResponse(
         access_token=access_token,
         expires_in=24 * 3600,  # 24 hours in seconds
-        user_id=str(user.id),
-        role=user.role.value,
     )
 
 

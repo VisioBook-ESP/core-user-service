@@ -23,7 +23,6 @@ cryptography>=42.0
 # Logging
 python-json-logger==2.*
 PyJWT==2.*
-passlib[bcrypt]==1.*
 
 # Monitoring / metrics
 prometheus-client==0.*
@@ -39,7 +38,7 @@ black==24.*
 mypy==1.*
 pylint==3.*
 ruff==0.*
-types-passlib==1.*
+types-bcrypt==0.*
 
 # Security checks
 bandit>=1.7.0
