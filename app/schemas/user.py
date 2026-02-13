@@ -17,19 +17,23 @@ if TYPE_CHECKING:
 UserRole = Literal["admin", "user"]
 
 
-class UserBase(BaseModel):
-    """Base attributes shared by in/out models (except password)."""
+class RegisterRequest(BaseModel):
+    """Payload for public registration (no role field — always 'user')."""
 
-    email: EmailStr  # required
-    username: Annotated[str, Field(min_length=3, max_length=50)]  # required
-    role: UserRole = "user"  # optional, default -> "user"
+    email: EmailStr
+    username: Annotated[str, Field(min_length=3, max_length=50)]
+    password: Annotated[str, Field(min_length=6)]
+    first_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
+    last_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
 
 
-class UserCreate(UserBase):
-    """Payload required to create a user."""
+class UserCreate(BaseModel):
+    """Payload for admin user creation (role can be specified)."""
 
-    password: Annotated[str, Field(min_length=6)]  # required (no default)
-    # Profile fields (optional)
+    email: EmailStr
+    username: Annotated[str, Field(min_length=3, max_length=50)]
+    password: Annotated[str, Field(min_length=6)]
+    role: UserRole = "user"
     first_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
     last_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
 
@@ -64,6 +68,27 @@ class UserOut(BaseModel):
             email=user.email,
             username=user.username,
             role=user.role.value,
+            first_name=user.profile.first_name if user.profile else None,
+            last_name=user.profile.last_name if user.profile else None,
+        )
+
+
+class RegisterOut(BaseModel):
+    """Response model for registration (no role exposed)."""
+
+    id: str
+    email: EmailStr
+    username: str
+    first_name: str | None = None
+    last_name: str | None = None
+
+    @classmethod
+    def from_model(cls, user: User) -> RegisterOut:
+        """Build a RegisterOut from a SQLAlchemy User model."""
+        return cls(
+            id=str(user.id),
+            email=user.email,
+            username=user.username,
             first_name=user.profile.first_name if user.profile else None,
             last_name=user.profile.last_name if user.profile else None,
         )
