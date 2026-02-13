@@ -45,10 +45,11 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)) -> Tok
         )
 
     # Create JWT token with user data
+    roles = ["admin", "user"] if user.role == UserRole.ADMIN else ["user"]
     token_data = {
         "sub": str(user.id),  # Subject (user ID)
         "email": user.email,
-        "role": user.role.value,  # Convert enum to string
+        "roles": roles,
     }
 
     # Token expires in 24 hours

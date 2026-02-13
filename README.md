@@ -241,6 +241,7 @@ Une fois le service démarré, la documentation interactive est disponible :
 | `/api/v1/users` | POST | Admin only | Créer un utilisateur |
 | `/api/v1/users/me` | GET | Authentifié | Mon profil |
 | `/api/v1/users/me` | PUT | Authentifié | Modifier mon profil (rôle non modifiable) |
+| `/api/v1/users/me` | DELETE | Authentifié | Supprimer son propre compte |
 | `/api/v1/users/{user_id}` | GET | Propre profil ou admin | Récupérer un utilisateur |
 | `/api/v1/users/{user_id}` | PUT | Propre profil ou admin | Modifier un utilisateur |
 | `/api/v1/users/{user_id}` | DELETE | Admin only | Supprimer un utilisateur |
@@ -318,7 +319,7 @@ Il s'exécute automatiquement sur chaque **Pull Request vers `dev`** :
   - Les autres microservices vérifient les tokens via l'endpoint JWKS (`/api/v1/auth/.well-known/jwks.json`)
   - En dev, une clé éphémère est auto-générée si `RSA_PRIVATE_KEY` est vide
   - En production, `RSA_PRIVATE_KEY` est obligatoire (via Kubernetes Secret)
-- **Rôles** : `admin` et `user` — contrôle d'accès sur chaque endpoint
+- **Rôles** : `roles` est un tableau dans le JWT (`["user"]` ou `["admin", "user"]`)
 - **Variables sensibles** jamais en dur dans le code (utilisation de `.env`)
 - **Vérifications automatiques** avec :
   - `bandit` : Analyse du code source pour les vulnérabilités
