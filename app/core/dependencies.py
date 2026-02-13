@@ -50,7 +50,7 @@ async def get_current_user(
     return TokenData(
         user_id=payload.get("sub"),
         email=payload.get("email"),
-        role=payload.get("role"),
+        roles=payload.get("roles", []),
     )
 
 
@@ -78,27 +78,13 @@ def require_role(required_role: UserRole) -> Any:
         Raises:
             HTTPException: If user doesn't have required role
         """
-        if not current_user.role:
+        if not current_user.roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Rôle utilisateur manquant",
             )
 
-        try:
-            user_role = UserRole(current_user.role)
-        except ValueError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Rôle utilisateur invalide",
-            ) from exc
-
-        # Check role hierarchy: ADMIN > USER
-        role_hierarchy = {
-            UserRole.USER: 1,
-            UserRole.ADMIN: 2,
-        }
-
-        if role_hierarchy.get(user_role, 0) < role_hierarchy.get(required_role, 999):
+        if required_role.value not in current_user.roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Accès refusé. Rôle requis : {required_role.value}",

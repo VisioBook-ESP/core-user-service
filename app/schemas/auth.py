@@ -39,10 +39,10 @@ class TokenData(BaseModel):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "example": {"user_id": "1", "email": "admin@visiobook.com", "role": "admin"}
+            "example": {"user_id": "1", "email": "admin@visiobook.com", "roles": ["admin", "user"]}
         }
     )
 
     user_id: str | None = None
     email: str | None = None
-    role: str | None = None
+    roles: list[str] = []
