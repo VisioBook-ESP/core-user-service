@@ -1,5 +1,6 @@
 """Seed the database with an initial admin user."""
 
+import logging
 import sys
 from pathlib import Path
 
@@ -10,6 +11,9 @@ from app.core.database import get_session
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 
 def seed() -> None:
     """Create admin user if it does not already exist."""
@@ -17,7 +21,7 @@ def seed() -> None:
     try:
         existing = db.query(User).filter(User.email == "admin@mail.com").first()
         if existing:
-            print("Admin user already exists, skipping seed.")
+            logger.info("Admin user already exists, skipping seed.")
             return
 
         admin = User(
@@ -28,7 +32,7 @@ def seed() -> None:
         )
         db.add(admin)
         db.commit()
-        print("Admin user created (admin@mail.com).")
+        logger.info("Admin user created (admin@mail.com).")
     finally:
         db.close()
 
