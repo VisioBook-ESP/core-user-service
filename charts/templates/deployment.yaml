@@ -8,6 +8,14 @@ metadata:
     argocd.argoproj.io/sync-wave: {{ .Values.syncWave | default "0" | quote }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit | default 2 }}
+  progressDeadlineSeconds: {{ .Values.progressDeadlineSeconds | default 300 }}
+  minReadySeconds: {{ .Values.minReadySeconds | default 0 }}
+  strategy:
+    type: {{ .Values.strategy.type }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable | default 0 }}
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge | default 1 }}
   selector:
     matchLabels:
       app: {{ include "core-user-service.name" . }}
@@ -18,11 +26,13 @@ spec:
         {{- if .Values.istio.enabled }}
         version: {{ .Values.image.tag | quote }}
         {{- end }}
-      {{- if .Values.istio.injection }}
       annotations:
+        checksum/chart: {{ print (toYaml .Values) (.Files.Glob "**" | toString) | sha256sum | quote }}
+      {{- if .Values.istio.injection }}
         sidecar.istio.io/inject: "true"
       {{- end }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
