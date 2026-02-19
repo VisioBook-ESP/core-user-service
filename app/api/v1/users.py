@@ -116,6 +116,37 @@ def update_my_profile(
     return UserOut.from_model(user)
 
 
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_my_account(
+    current_user: TokenData = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    """Delete the current user's own account."""
+    if not current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user token",
+        )
+
+    try:
+        user_id = int(current_user.user_id)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user token format",
+        ) from exc
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    db.delete(user)
+    db.commit()
+
+
 @router.get("/{user_id}", response_model=UserOut)
 def get_user(
     user_id: int,
@@ -124,7 +155,7 @@ def get_user(
 ) -> UserOut:
     """Retrieve a user by ID from database. Can only view own profile or must be admin."""
     # Check authorization: must be viewing own profile OR be an admin
-    if str(user_id) != current_user.user_id and current_user.role != "admin":
+    if str(user_id) != current_user.user_id and "admin" not in current_user.roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this user",
@@ -195,7 +226,7 @@ def update_user(
     """Update an existing user. Can only update own profile or must be admin."""
     # Check authorization: must be updating own profile OR be an admin
     is_own_profile = str(user_id) == current_user.user_id
-    is_admin = current_user.role == "admin"
+    is_admin = "admin" in current_user.roles
 
     if not is_own_profile and not is_admin:
         raise HTTPException(

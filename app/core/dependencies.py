@@ -6,9 +6,11 @@ from typing import Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
 
+from app.core.database import get_db
 from app.core.security import verify_token
-from app.models.user import UserRole
+from app.models.user import User, UserRole
 from app.schemas.auth import TokenData
 
 # HTTP Bearer token security scheme
@@ -17,19 +19,9 @@ security = HTTPBearer(auto_error=False)
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    db: Session = Depends(get_db),
 ) -> TokenData:
-    """
-    Extract and validate the current user from JWT token.
-
-    Args:
-        credentials: Bearer token from Authorization header
-
-    Returns:
-        TokenData: User information from the token
-
-    Raises:
-        HTTPException: If token is invalid or expired
-    """
+    """Extract and validate the current user from JWT token, fetch roles from DB."""
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -47,58 +39,31 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    return TokenData(
-        user_id=payload.get("sub"),
-        email=payload.get("email"),
-        role=payload.get("role"),
-    )
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalide",
+        )
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Utilisateur introuvable",
+        )
+
+    roles = ["admin", "user"] if user.role == UserRole.ADMIN else ["user"]
+
+    return TokenData(user_id=user_id, roles=roles)
 
 
 def require_role(required_role: UserRole) -> Any:
-    """
-    Factory function to create role-based access control dependencies.
-
-    Args:
-        required_role: The minimum role required to access the endpoint
-
-    Returns:
-        Dependency function that validates user role
-    """
+    """Factory function to create role-based access control dependencies."""
 
     async def role_checker(current_user: TokenData = Depends(get_current_user)) -> TokenData:
-        """
-        Check if the current user has the required role.
-
-        Args:
-            current_user: Current authenticated user
-
-        Returns:
-            TokenData: User information if authorized
-
-        Raises:
-            HTTPException: If user doesn't have required role
-        """
-        if not current_user.role:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Rôle utilisateur manquant",
-            )
-
-        try:
-            user_role = UserRole(current_user.role)
-        except ValueError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Rôle utilisateur invalide",
-            ) from exc
-
-        # Check role hierarchy: ADMIN > USER
-        role_hierarchy = {
-            UserRole.USER: 1,
-            UserRole.ADMIN: 2,
-        }
-
-        if role_hierarchy.get(user_role, 0) < role_hierarchy.get(required_role, 999):
+        """Check if the current user has the required role."""
+        if required_role.value not in current_user.roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Accès refusé. Rôle requis : {required_role.value}",

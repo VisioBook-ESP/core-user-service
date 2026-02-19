@@ -32,6 +32,7 @@ COPY --from=builder /app/app ./app
 COPY --from=builder /app/tests ./tests
 COPY --from=builder /app/alembic ./alembic
 COPY --from=builder /app/alembic.ini ./alembic.ini
+COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/docker/entrypoint.sh ./entrypoint.sh
 
 # Give appuser write permissions to the working directory

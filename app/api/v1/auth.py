@@ -13,7 +13,7 @@ from app.core.keys import get_jwks
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.models.user import Profile, User, UserRole
 from app.schemas.auth import LoginRequest, TokenResponse
-from app.schemas.user import UserCreate, UserOut
+from app.schemas.user import RegisterOut, RegisterRequest
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
@@ -46,22 +46,17 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)) -> Tok
 
     # Create JWT token with user data
     token_data = {
-        "sub": str(user.id),  # Subject (user ID)
-        "email": user.email,
-        "role": user.role.value,  # Convert enum to string
+        "sub": str(user.id),
     }
 
     # Token expires in 24 hours
     access_token = create_access_token(data=token_data, expires_delta=timedelta(hours=24))
 
-    return TokenResponse(
-        access_token=access_token,
-        expires_in=24 * 3600,  # 24 hours in seconds
-    )
+    return TokenResponse(access_token=access_token)
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-async def register(dto: UserCreate, db: Session = Depends(get_db)) -> UserOut:
+@router.post("/register", response_model=RegisterOut, status_code=status.HTTP_201_CREATED)
+async def register(dto: RegisterRequest, db: Session = Depends(get_db)) -> RegisterOut:
     """Register a new user. Always creates with 'user' role."""
     existing_user = (
         db.query(User).filter((User.email == dto.email) | (User.username == dto.username)).first()
@@ -88,7 +83,7 @@ async def register(dto: UserCreate, db: Session = Depends(get_db)) -> UserOut:
         db.commit()
         db.refresh(user)
 
-    return UserOut.from_model(user)
+    return RegisterOut.from_model(user)
 
 
 @router.get("/.well-known/jwks.json")
