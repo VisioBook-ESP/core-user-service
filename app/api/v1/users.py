@@ -155,7 +155,7 @@ def get_user(
 ) -> UserOut:
     """Retrieve a user by ID from database. Can only view own profile or must be admin."""
     # Check authorization: must be viewing own profile OR be an admin
-    if str(user_id) != current_user.user_id and current_user.role != "admin":
+    if str(user_id) != current_user.user_id and "admin" not in current_user.roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this user",
@@ -226,7 +226,7 @@ def update_user(
     """Update an existing user. Can only update own profile or must be admin."""
     # Check authorization: must be updating own profile OR be an admin
     is_own_profile = str(user_id) == current_user.user_id
-    is_admin = current_user.role == "admin"
+    is_admin = "admin" in current_user.roles
 
     if not is_own_profile and not is_admin:
         raise HTTPException(
