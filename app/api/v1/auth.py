@@ -45,20 +45,14 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)) -> Tok
         )
 
     # Create JWT token with user data
-    roles = ["admin", "user"] if user.role == UserRole.ADMIN else ["user"]
     token_data = {
-        "sub": str(user.id),  # Subject (user ID)
-        "email": user.email,
-        "roles": roles,
+        "sub": str(user.id),
     }
 
     # Token expires in 24 hours
     access_token = create_access_token(data=token_data, expires_delta=timedelta(hours=24))
 
-    return TokenResponse(
-        access_token=access_token,
-        expires_in=24 * 3600,  # 24 hours in seconds
-    )
+    return TokenResponse(access_token=access_token)
 
 
 @router.post("/register", response_model=RegisterOut, status_code=status.HTTP_201_CREATED)
