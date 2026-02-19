@@ -34,9 +34,7 @@ class TokenData(BaseModel):
     """Schema for JWT token payload data."""
 
     model_config = ConfigDict(
-        json_schema_extra={
-            "example": {"user_id": "1", "roles": ["admin", "user"]}
-        }
+        json_schema_extra={"example": {"user_id": "1", "roles": ["admin", "user"]}}
     )
 
     user_id: str | None = None
