@@ -7,9 +7,9 @@ image:
   pullPolicy: Always
 
 service:
-  type: NodePort
+  type: ClusterIP
   port: 80
-  nodePort: 30081
+  targetPort: 30081
 
 istio:
   enabled: true
