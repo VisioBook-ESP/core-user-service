@@ -3,7 +3,7 @@ name: core-user-service
 
 image:
   repository: ghcr.io/visiobook-esp/core-user-service-dev
-  tag: "sha-7c6d69c"
+  tag: "sha-377ad89"
   pullPolicy: IfNotPresent
 
 service:
