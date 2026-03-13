@@ -24,5 +24,8 @@ cryptography>=42.0
 python-json-logger==2.*
 PyJWT==2.*
 
+# HTTP client
+httpx==0.*
+
 # Monitoring / metrics
 prometheus-client==0.*

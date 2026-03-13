@@ -32,6 +32,7 @@ class User(BaseModel):
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     password: Mapped[str] = mapped_column(String, nullable=False)  # Hashed password
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.USER, nullable=False)
+    folder_id: Mapped[str | None] = mapped_column(String, nullable=True)
 
     # Relations
     profile: Mapped[Profile | None] = relationship(
