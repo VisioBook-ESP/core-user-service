@@ -75,7 +75,7 @@ env:
   JWT_KID: visiobook-key-1
   JWT_ISSUER: core-user-service
   ACCESS_TOKEN_EXPIRE_MINUTES: 30
-  CONTENT_INJECTION_SERVICE_URL: http://content-injection-service
+  CONTENT_INJECTION_SERVICE_URL: http://content-ingestion-service.visiobook-namespace.svc.cluster.local
   # CORS_ORIGINS: ["http://localhost:3000","http://localhost:8080"]
 
   # Configuration Python
