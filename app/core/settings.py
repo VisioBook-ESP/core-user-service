@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     jwt_issuer: str = "core-user-service"
     access_token_expire_minutes: int = 30
 
+    # External services
+    content_injection_service_url: str = ""
+
     model_config = {"env_file": ".env", "case_sensitive": False, "extra": "ignore"}
 
 
