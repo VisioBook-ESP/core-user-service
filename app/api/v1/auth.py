@@ -100,8 +100,8 @@ async def register(dto: RegisterRequest, db: Session = Depends(get_db)) -> Regis
                 user.folder_id = folder_data["folderId"]
                 db.commit()
                 db.refresh(user)
-        except httpx.HTTPError:
-            logger.warning("Failed to create folder for user %s", user.id)
+        except (httpx.HTTPError, KeyError) as exc:
+            logger.warning("Failed to create folder for user %s: %s", user.id, exc)
 
     return RegisterOut.from_model(user)
 
