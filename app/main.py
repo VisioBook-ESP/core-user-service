@@ -5,6 +5,7 @@ Initializes FastAPI app, CORS, health/ready endpoints, and API routers.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, status
@@ -30,6 +31,9 @@ def _compute_cors_origins() -> list[str]:
     if settings.env.lower() == "dev" and not raw:
         return ["*"]
     return raw
+
+
+logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
 
 
 def create_app() -> FastAPI:
