@@ -2,6 +2,8 @@
 User API endpoints. Provides CRUD operations for user resources.
 """
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -11,6 +13,8 @@ from app.core.security import get_password_hash
 from app.models.user import Profile, User, UserRole
 from app.schemas.auth import TokenData
 from app.schemas.user import UserCreate, UserOut, UserUpdate
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -55,6 +59,8 @@ def get_my_profile(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User profile not found",
         )
+
+    logger.info("GET /me - user_id=%s, folder_id=%s", user.id, user.folder_id)
 
     return UserOut.from_model(user)
 
