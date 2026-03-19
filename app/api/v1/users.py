@@ -36,6 +36,12 @@ def resolve_folder(
     db: Session = Depends(get_db),
 ) -> dict[str, str | None]:
     """Resolve the folder_id for a given token. Used by content-ingestion-service."""
+    if not current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user token",
+        )
+
     try:
         user_id = int(current_user.user_id)
     except (ValueError, TypeError) as exc:
