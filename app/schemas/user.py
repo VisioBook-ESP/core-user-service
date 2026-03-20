@@ -47,7 +47,7 @@ class UserUpdate(BaseModel):
     role: UserRole | None = None
     first_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
     last_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
-    folder_id: str | None = None
+    folderId: str | None = None
 
 
 class UserOut(BaseModel):
@@ -57,7 +57,7 @@ class UserOut(BaseModel):
     email: EmailStr
     username: str
     role: UserRole
-    folder_id: str | None = None
+    folderId: str | None = None
     # Profile fields (optional)
     first_name: str | None = None
     last_name: str | None = None
@@ -70,7 +70,7 @@ class UserOut(BaseModel):
             email=user.email,
             username=user.username,
             role=user.role.value,
-            folder_id=user.folder_id,
+            folderId=user.folder_id,
             first_name=user.profile.first_name if user.profile else None,
             last_name=user.profile.last_name if user.profile else None,
         )
@@ -82,7 +82,7 @@ class RegisterOut(BaseModel):
     id: str
     email: EmailStr
     username: str
-    folder_id: str | None = None
+    folderId: str | None = None
     first_name: str | None = None
     last_name: str | None = None
 
@@ -93,7 +93,7 @@ class RegisterOut(BaseModel):
             id=str(user.id),
             email=user.email,
             username=user.username,
-            folder_id=user.folder_id,
+            folderId=user.folder_id,
             first_name=user.profile.first_name if user.profile else None,
             last_name=user.profile.last_name if user.profile else None,
         )

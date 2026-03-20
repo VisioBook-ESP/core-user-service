@@ -59,7 +59,7 @@ def resolve_folder(
 
     logger.info("GET /resolve-folder - user_id=%s, folder_id=%s", user.id, user.folder_id)
 
-    return {"folder_id": user.folder_id}
+    return {"folderId": user.folder_id}
 
 
 @router.get("/me", response_model=UserOut)
@@ -138,8 +138,8 @@ def update_my_profile(
         user.username = dto.username
     if dto.password is not None:
         user.password = get_password_hash(dto.password)
-    if dto.folder_id is not None:
-        user.folder_id = dto.folder_id
+    if dto.folderId is not None:
+        user.folder_id = dto.folderId
 
     if dto.first_name is not None or dto.last_name is not None:
         if not user.profile:
@@ -298,8 +298,8 @@ def update_user(
         user.password = get_password_hash(dto.password)
     if dto.role is not None:
         user.role = UserRole(dto.role)
-    if dto.folder_id is not None:
-        user.folder_id = dto.folder_id
+    if dto.folderId is not None:
+        user.folder_id = dto.folderId
 
     # Update profile fields if they exist
     if dto.first_name is not None or dto.last_name is not None:
