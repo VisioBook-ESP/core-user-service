@@ -62,6 +62,38 @@ def resolve_folder(
     return {"folderId": user.folder_id}
 
 
+@router.get("/resolve-user")
+def resolve_user(
+    current_user: TokenData = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, int]:
+    """Resolve the user_id for a given token. Used by other services (e.g. core-project-service)."""
+    if not current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user token",
+        )
+
+    try:
+        user_id = int(current_user.user_id)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user token format",
+        ) from exc
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    logger.info("GET /resolve-user - user_id=%s", user.id)
+
+    return {"userId": user.id}
+
+
 @router.get("/me", response_model=UserOut)
 def get_my_profile(
     current_user: TokenData = Depends(get_current_user),  # 🔒 Login required
