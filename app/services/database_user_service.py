@@ -171,7 +171,7 @@ class DatabaseUserService:
         from app.schemas.user import UserOut  # pylint: disable=import-outside-toplevel
 
         return UserOut(
-            id=str(db_user.id),
+            uuid=str(db_user.uuid),
             email=db_user.email,
             username=db_user.username,
             role=db_user.role.value,  # Convert enum to string

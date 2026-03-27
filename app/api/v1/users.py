@@ -30,13 +30,12 @@ def list_users(
     return [UserOut.from_model(user) for user in users]
 
 
-
 @router.get("/resolve-user")
 def resolve_user(
     current_user: TokenData = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
-    """Resolve the user UUID for a given token. Used by other services (e.g. core-project-service)."""
+    """Resolve the user UUID for a given token."""
     if not current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

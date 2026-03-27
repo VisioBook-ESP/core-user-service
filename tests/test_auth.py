@@ -139,6 +139,7 @@ class TestJWTTokens:
 
         # sub should be a valid UUID
         import uuid
+
         uuid.UUID(payload["sub"])  # raises ValueError if not a valid UUID
         assert payload["iss"] == "core-user-service"
         assert "exp" in payload
