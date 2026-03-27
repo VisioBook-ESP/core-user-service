@@ -47,18 +47,15 @@ class UserUpdate(BaseModel):
     role: UserRole | None = None
     first_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
     last_name: Annotated[str, Field(min_length=1, max_length=50)] | None = None
-    folderId: str | None = None
 
 
 class UserOut(BaseModel):
     """Response model for user data (never includes password)."""
 
-    id: str
+    uuid: str
     email: EmailStr
     username: str
     role: UserRole
-    folderId: str | None = None
-    # Profile fields (optional)
     first_name: str | None = None
     last_name: str | None = None
 
@@ -66,11 +63,10 @@ class UserOut(BaseModel):
     def from_model(cls, user: User) -> UserOut:
         """Build a UserOut from a SQLAlchemy User model."""
         return cls(
-            id=str(user.id),
+            uuid=str(user.uuid),
             email=user.email,
             username=user.username,
             role=user.role.value,
-            folderId=user.folder_id,
             first_name=user.profile.first_name if user.profile else None,
             last_name=user.profile.last_name if user.profile else None,
         )
@@ -79,10 +75,9 @@ class UserOut(BaseModel):
 class RegisterOut(BaseModel):
     """Response model for registration (no role exposed)."""
 
-    id: str
+    uuid: str
     email: EmailStr
     username: str
-    folderId: str | None = None
     first_name: str | None = None
     last_name: str | None = None
 
@@ -90,10 +85,9 @@ class RegisterOut(BaseModel):
     def from_model(cls, user: User) -> RegisterOut:
         """Build a RegisterOut from a SQLAlchemy User model."""
         return cls(
-            id=str(user.id),
+            uuid=str(user.uuid),
             email=user.email,
             username=user.username,
-            folderId=user.folder_id,
             first_name=user.profile.first_name if user.profile else None,
             last_name=user.profile.last_name if user.profile else None,
         )

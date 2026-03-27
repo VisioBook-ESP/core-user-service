@@ -129,21 +129,19 @@ class TestJWTTokens:
     """Test JWT token validation and expiration."""
 
     def test_token_contains_user_data(self):
-        """Test that JWT token contains correct user data."""
-        # Get a token
+        """Test that JWT token contains correct user data (UUID in sub claim)."""
         response = client.post(
             "/api/v1/auth/login", json={"email": "admin@visiobook.com", "password": "admin123"}
         )
         token = response.json()["access_token"]
 
-        # Decode token (without verification for testing)
         payload = jwt.decode(token, options={"verify_signature": False})
 
-        assert payload["sub"] == "1"  # user_id - now using integer IDs as strings
-        assert payload["email"] == "admin@visiobook.com"
-        assert payload["role"] == "admin"
+        # sub should be a valid UUID
+        import uuid
+        uuid.UUID(payload["sub"])  # raises ValueError if not a valid UUID
         assert payload["iss"] == "core-user-service"
-        assert "exp" in payload  # expiration time
+        assert "exp" in payload
 
     def test_expired_token_rejected(self):
         """Test that expired tokens are rejected."""

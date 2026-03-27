@@ -5,8 +5,10 @@ User and profile models.
 from __future__ import annotations
 
 import enum
+import uuid as uuid_lib
 
 from sqlalchemy import Enum, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import SCHEMA_NAME, BaseModel
@@ -28,11 +30,13 @@ class User(BaseModel):
 
     __tablename__ = "users"
 
+    uuid: Mapped[uuid_lib.UUID] = mapped_column(
+        UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False, index=True
+    )
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     password: Mapped[str] = mapped_column(String, nullable=False)  # Hashed password
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.USER, nullable=False)
-    folder_id: Mapped[str | None] = mapped_column(String, nullable=True)
 
     # Relations
     profile: Mapped[Profile | None] = relationship(
