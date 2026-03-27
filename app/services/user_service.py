@@ -20,6 +20,7 @@ class UserRecord(TypedDict):
     """Required fields for UserRecord."""
 
     id: str
+    uuid: str
     email: str
     username: str
     password: str
@@ -89,7 +90,7 @@ def _to_user_out(u: UserRecordOptional) -> UserOut:
     from app.schemas.user import UserOut  # pylint: disable=import-outside-toplevel
 
     return UserOut(
-        id=u["id"],
+        uuid=u["uuid"],
         email=u["email"],
         username=u["username"],
         role=_ensure_literal_role(u.get("role")),
@@ -125,6 +126,7 @@ def create_user(dto: UserCreate) -> UserOut:
     items = _load_data()
     record: UserRecordOptional = {
         "id": f"u_{uuid.uuid4().hex[:8]}",
+        "uuid": str(uuid.uuid4()),
         "email": dto.email,
         "username": dto.username,
         "password": dto.password,  # stored in clear only for the mock

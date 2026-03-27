@@ -30,73 +30,33 @@ def list_users(
     return [UserOut.from_model(user) for user in users]
 
 
-@router.get("/resolve-folder")
-def resolve_folder(
-    current_user: TokenData = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict[str, str | None]:
-    """Resolve the folder_id for a given token. Used by content-ingestion-service."""
-    if not current_user.user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user token",
-        )
-
-    try:
-        user_id = int(current_user.user_id)
-    except (ValueError, TypeError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user token format",
-        ) from exc
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    logger.info("GET /resolve-folder - user_id=%s, folder_id=%s", user.id, user.folder_id)
-
-    return {"folderId": user.folder_id}
-
-
 @router.get("/resolve-user")
 def resolve_user(
     current_user: TokenData = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> dict[str, int]:
-    """Resolve the user_id for a given token. Used by other services (e.g. core-project-service)."""
+) -> dict[str, str]:
+    """Resolve the user UUID for a given token."""
     if not current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid user token",
         )
 
-    try:
-        user_id = int(current_user.user_id)
-    except (ValueError, TypeError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user token format",
-        ) from exc
-
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.uuid == current_user.user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
 
-    logger.info("GET /resolve-user - user_id=%s", user.id)
+    logger.info("GET /resolve-user - user_uuid=%s", user.uuid)
 
-    return {"userId": user.id}
+    return {"userId": str(user.uuid)}
 
 
 @router.get("/me", response_model=UserOut)
 def get_my_profile(
-    current_user: TokenData = Depends(get_current_user),  # 🔒 Login required
+    current_user: TokenData = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> UserOut:
     """Get the current user's profile from database."""
@@ -106,17 +66,7 @@ def get_my_profile(
             detail="Invalid user token",
         )
 
-    # Convert string user_id back to integer for database query
-    try:
-        user_id = int(current_user.user_id)
-    except (ValueError, TypeError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user token format",
-        ) from exc
-
-    # Query user from database using integer ID
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.uuid == current_user.user_id).first()
 
     if not user:
         raise HTTPException(
@@ -124,7 +74,7 @@ def get_my_profile(
             detail="User profile not found",
         )
 
-    logger.info("GET /me - user_id=%s, folder_id=%s", user.id, user.folder_id)
+    logger.info("GET /me - user_uuid=%s", user.uuid)
 
     return UserOut.from_model(user)
 
@@ -142,15 +92,7 @@ def update_my_profile(
             detail="Invalid user token",
         )
 
-    try:
-        user_id = int(current_user.user_id)
-    except (ValueError, TypeError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user token format",
-        ) from exc
-
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.uuid == current_user.user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -170,8 +112,6 @@ def update_my_profile(
         user.username = dto.username
     if dto.password is not None:
         user.password = get_password_hash(dto.password)
-    if dto.folderId is not None:
-        user.folder_id = dto.folderId
 
     if dto.first_name is not None or dto.last_name is not None:
         if not user.profile:
@@ -200,15 +140,7 @@ def delete_my_account(
             detail="Invalid user token",
         )
 
-    try:
-        user_id = int(current_user.user_id)
-    except (ValueError, TypeError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user token format",
-        ) from exc
-
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.uuid == current_user.user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -219,22 +151,20 @@ def delete_my_account(
     db.commit()
 
 
-@router.get("/{user_id}", response_model=UserOut)
+@router.get("/{user_uuid}", response_model=UserOut)
 def get_user(
-    user_id: int,
+    user_uuid: str,
     current_user: TokenData = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> UserOut:
-    """Retrieve a user by ID from database. Can only view own profile or must be admin."""
-    # Check authorization: must be viewing own profile OR be an admin
-    if str(user_id) != current_user.user_id and "admin" not in current_user.roles:
+    """Retrieve a user by UUID from database. Can only view own profile or must be admin."""
+    if user_uuid != current_user.user_id and "admin" not in current_user.roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this user",
         )
 
-    # Query user from database using integer ID
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.uuid == user_uuid).first()
 
     if not user:
         raise HTTPException(
@@ -288,16 +218,15 @@ def create_user(
     return UserOut.from_model(user)
 
 
-@router.put("/{user_id}", response_model=UserOut)
+@router.put("/{user_uuid}", response_model=UserOut)
 def update_user(
-    user_id: int,
+    user_uuid: str,
     dto: UserUpdate,
     current_user: TokenData = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> UserOut:
     """Update an existing user. Can only update own profile or must be admin."""
-    # Check authorization: must be updating own profile OR be an admin
-    is_own_profile = str(user_id) == current_user.user_id
+    is_own_profile = user_uuid == current_user.user_id
     is_admin = "admin" in current_user.roles
 
     if not is_own_profile and not is_admin:
@@ -306,15 +235,13 @@ def update_user(
             detail="Not authorized to update this user",
         )
 
-    # Prevent users from changing their own role (only admins can change roles)
     if is_own_profile and not is_admin and dto.role is not None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cannot change your own role",
         )
 
-    # Find user in database
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.uuid == user_uuid).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -330,8 +257,6 @@ def update_user(
         user.password = get_password_hash(dto.password)
     if dto.role is not None:
         user.role = UserRole(dto.role)
-    if dto.folderId is not None:
-        user.folder_id = dto.folderId
 
     # Update profile fields if they exist
     if dto.first_name is not None or dto.last_name is not None:
@@ -350,15 +275,14 @@ def update_user(
     return UserOut.from_model(user)
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_uuid}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(
-    user_id: int,
-    _current_user: TokenData = Depends(require_admin),  # 🔒 Admin only
+    user_uuid: str,
+    _current_user: TokenData = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> None:
-    """Delete a user by ID. (Admin only)"""
-    # Find user in database
-    user = db.query(User).filter(User.id == user_id).first()
+    """Delete a user by UUID. (Admin only)"""
+    user = db.query(User).filter(User.uuid == user_uuid).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

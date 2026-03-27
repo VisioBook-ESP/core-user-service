@@ -6,14 +6,12 @@ import logging
 from datetime import timedelta
 from typing import Any
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.keys import get_jwks
 from app.core.security import create_access_token, get_password_hash, verify_password
-from app.core.settings import settings
 from app.models.user import Profile, User, UserRole
 from app.schemas.auth import LoginRequest, TokenResponse
 from app.schemas.user import RegisterOut, RegisterRequest
@@ -49,9 +47,9 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)) -> Tok
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Create JWT token with user data
+    # Create JWT token with user UUID for cross-service identification
     token_data = {
-        "sub": str(user.id),
+        "sub": str(user.uuid),
     }
 
     # Token expires in 24 hours
@@ -87,21 +85,6 @@ async def register(dto: RegisterRequest, db: Session = Depends(get_db)) -> Regis
         db.add(profile)
         db.commit()
         db.refresh(user)
-
-    # Call content-injection-service to create a folder for the user
-    if settings.content_injection_service_url:
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{settings.content_injection_service_url}/api/v1/folders/",
-                )
-                response.raise_for_status()
-                folder_data = response.json()
-                user.folder_id = folder_data["folderId"]
-                db.commit()
-                db.refresh(user)
-        except (httpx.HTTPError, KeyError) as exc:
-            logger.warning("Failed to create folder for user %s: %s", user.id, exc)
 
     return RegisterOut.from_model(user)
 

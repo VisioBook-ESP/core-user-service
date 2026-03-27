@@ -39,14 +39,14 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user_id = payload.get("sub")
-    if not user_id:
+    user_uuid = payload.get("sub")
+    if not user_uuid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token invalide",
         )
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    user = db.query(User).filter(User.uuid == user_uuid).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -55,7 +55,7 @@ async def get_current_user(
 
     roles = ["admin", "user"] if user.role == UserRole.ADMIN else ["user"]
 
-    return TokenData(user_id=user_id, roles=roles)
+    return TokenData(user_id=str(user.uuid), roles=roles)
 
 
 def require_role(required_role: UserRole) -> Any:
