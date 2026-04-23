@@ -23,11 +23,19 @@ class TokenResponse(BaseModel):
         json_schema_extra={
             "example": {
                 "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "refresh_token": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...",
             }
         }
     )
 
     access_token: str
+    refresh_token: str
+
+
+class RefreshRequest(BaseModel):
+    """Schema for token refresh requests."""
+
+    refresh_token: str
 
 
 class TokenData(BaseModel):

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     jwt_kid: str = "visiobook-key-1"
     jwt_issuer: str = "core-user-service"
     access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
 
     model_config = {"env_file": ".env", "case_sensitive": False, "extra": "ignore"}
 
