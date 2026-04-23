@@ -2,6 +2,7 @@
 Security utilities for password hashing and JWT tokens.
 """
 
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -38,6 +39,16 @@ def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = 
         headers={"kid": settings.jwt_kid},
     )
     return encoded_jwt
+
+
+def generate_refresh_token() -> str:
+    """Generate a cryptographically secure refresh token string."""
+    return secrets.token_urlsafe(64)
+
+
+def get_refresh_token_expiry() -> datetime:
+    """Get the expiration datetime for a new refresh token."""
+    return datetime.now(UTC) + timedelta(days=settings.refresh_token_expire_days)
 
 
 def verify_token(token: str) -> dict[str, Any] | None:
