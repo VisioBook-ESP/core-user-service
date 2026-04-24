@@ -93,11 +93,12 @@ class TestProtectedRoutes:
         assert response.status_code == 401
 
     def test_delete_user_admin_success(self):
-        """Test deleting user as admin."""
+        """Test deleting user as admin (non-existent UUID returns 404)."""
         token = self._get_token("admin")
+        fake_uuid = "00000000-0000-0000-0000-000000000099"
 
         response = client.delete(
-            "/api/v1/users/999",
+            f"/api/v1/users/{fake_uuid}",
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code in [204, 404]
@@ -105,9 +106,10 @@ class TestProtectedRoutes:
     def test_delete_user_as_regular_user_forbidden(self):
         """Test that regular users cannot delete users."""
         token = self._get_token("user")
+        fake_uuid = "00000000-0000-0000-0000-000000000099"
 
         response = client.delete(
-            "/api/v1/users/999",
+            f"/api/v1/users/{fake_uuid}",
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 403
@@ -115,7 +117,7 @@ class TestProtectedRoutes:
 
     def test_delete_user_no_token(self):
         """Test deleting user without authentication."""
-        response = client.delete("/api/v1/users/999")
+        response = client.delete("/api/v1/users/00000000-0000-0000-0000-000000000099")
         assert response.status_code == 401
 
 
@@ -170,9 +172,7 @@ class TestRefreshTokens:
         data = self._login()
         old_refresh = data["refresh_token"]
 
-        response = client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": old_refresh}
-        )
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": old_refresh})
         assert response.status_code == 200
         new_data = response.json()
         assert "access_token" in new_data
@@ -185,22 +185,16 @@ class TestRefreshTokens:
         old_refresh = data["refresh_token"]
 
         # First refresh: should succeed
-        response = client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": old_refresh}
-        )
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": old_refresh})
         assert response.status_code == 200
 
         # Second refresh with same token: should fail
-        response = client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": old_refresh}
-        )
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": old_refresh})
         assert response.status_code == 401
 
     def test_refresh_invalid_token(self):
         """Test that an invalid refresh token is rejected."""
-        response = client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": "invalid-token"}
-        )
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": "invalid-token"})
         assert response.status_code == 401
 
     def test_logout_revokes_refresh_token(self):
@@ -218,9 +212,7 @@ class TestRefreshTokens:
         assert response.status_code == 204
 
         # Try to use the revoked refresh token
-        response = client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": refresh_token}
-        )
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
         assert response.status_code == 401
 
     def test_logout_requires_auth(self):
@@ -242,9 +234,7 @@ class TestRefreshTokens:
         new_access = response.json()["access_token"]
 
         # Use new access token
-        response = client.get(
-            "/api/v1/users/me", headers={"Authorization": f"Bearer {new_access}"}
-        )
+        response = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {new_access}"})
         assert response.status_code in [200, 404]
 
 
